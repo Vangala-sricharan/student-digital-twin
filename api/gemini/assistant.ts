@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { generateGeminiText } from '../_lib/gemini';
+import { generateGeminiText } from '../_lib/gemini.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set JSON Content-Type header
