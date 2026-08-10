@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getGeminiClient } from '../_lib/gemini';
+import { generateGeminiText } from '../_lib/gemini';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Content-Type', 'application/json');
@@ -12,29 +12,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { skillName, currentLevel = 0, requiredLevel = 100, goalTitle = 'AI/ML Engineer' } = req.body || {};
-    const ai = getGeminiClient();
+    const { skillName = 'this skill', currentLevel = 0, requiredLevel = 100, goalTitle = 'AI/ML Engineer' } = req.body || {};
 
-    if (!ai) {
-      return res.status(200).json({
-        success: true,
-        explanation: `${skillName || 'This skill'} is crucial for ${goalTitle}. Closing the ${
-          requiredLevel - currentLevel
-        }% gap will strengthen your technical foundation and portfolio quality.`,
-        recommendedAction: `Complete hands-on projects or focused exercises on ${skillName} over the next 2-3 weeks.`,
-      });
-    }
+    const fallbackExplanation = `${skillName} is crucial for target role ${goalTitle}. Closing the ${Math.max(
+      0,
+      requiredLevel - currentLevel
+    )}% gap will strengthen your technical foundation and portfolio readiness.`;
 
     const prompt = `Provide a short, concise, personalized explanation (2 sentences) and recommended action (1 sentence) for a student who has a gap in ${skillName} (Current: ${currentLevel}%, Target: ${requiredLevel}%) for the target role of ${goalTitle}.`;
 
-    const geminiRes = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+    const { text } = await generateGeminiText({
       contents: prompt,
     });
 
     return res.status(200).json({
       success: true,
-      explanation: geminiRes.text || 'Focus on closing this skill gap through hands-on practice.',
+      explanation: text || fallbackExplanation,
     });
   } catch (err: any) {
     return res.status(200).json({
@@ -43,3 +36,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 }
+

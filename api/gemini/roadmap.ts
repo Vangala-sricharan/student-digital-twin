@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Type } from '@google/genai';
-import { getGeminiClient } from '../_lib/gemini';
+import { generateGeminiText } from '../_lib/gemini';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Content-Type', 'application/json');
@@ -14,53 +14,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { skills, goalTitle = 'AI/ML Engineer' } = req.body || {};
-    const ai = getGeminiClient();
 
-    if (!ai) {
-      return res.status(200).json({
-        success: true,
-        targetGoal: goalTitle,
-        stages: [
-          {
-            phase: 'Phase 1: Foundations',
-            title: 'Master Core Programming & C++/Python',
-            status: 'Completed',
-            items: ['C++ OOP & File Handling', 'Basic Python Scripting', 'Git & Version Control'],
-          },
-          {
-            phase: 'Phase 2: Data Structures',
-            title: 'DSA & Algorithmic Problem Solving',
-            status: 'In Progress',
-            items: ['Arrays, Linked Lists & Stacks', 'Trees & Searching/Sorting', 'Solve 50+ LeetCode problems'],
-          },
-          {
-            phase: 'Phase 3: Machine Learning',
-            title: 'Statistical ML & Data Wrangling',
-            status: 'Next Up',
-            items: ['NumPy, Pandas & Scikit-Learn', 'Linear Regression & Classification', 'CNN Image Classifier Project'],
-          },
-          {
-            phase: 'Phase 4: Deep Learning & Deployment',
-            title: 'PyTorch & API Model Deployment',
-            status: 'Future',
-            items: ['PyTorch / TensorFlow Neural Networks', 'FastAPI Web Service Wrapper', 'Deploy to Cloud / Render'],
-          },
-          {
-            phase: 'Phase 5: Career & Internship',
-            title: 'Portfolio & Interview Preparation',
-            status: 'Future',
-            items: ['GitHub README polish', 'Resume optimization', 'Mock interviews & applications'],
-          },
-        ],
-      });
-    }
+    const fallbackData = {
+      success: true,
+      targetGoal: goalTitle,
+      stages: [
+        {
+          phase: 'Phase 1: Foundations',
+          title: 'Master Core Programming & C++/Python',
+          status: 'Completed',
+          items: ['C++ OOP & File Handling', 'Basic Python Scripting', 'Git & Version Control'],
+        },
+        {
+          phase: 'Phase 2: Data Structures',
+          title: 'DSA & Algorithmic Problem Solving',
+          status: 'In Progress',
+          items: ['Arrays, Linked Lists & Stacks', 'Trees & Searching/Sorting', 'Solve 50+ LeetCode problems'],
+        },
+        {
+          phase: 'Phase 3: Machine Learning',
+          title: 'Statistical ML & Data Wrangling',
+          status: 'Next Up',
+          items: ['NumPy, Pandas & Scikit-Learn', 'Linear Regression & Classification', 'CNN Image Classifier Project'],
+        },
+        {
+          phase: 'Phase 4: Deep Learning & Deployment',
+          title: 'PyTorch & API Model Deployment',
+          status: 'Future',
+          items: ['PyTorch / TensorFlow Neural Networks', 'FastAPI Web Service Wrapper', 'Deploy to Cloud / Render'],
+        },
+        {
+          phase: 'Phase 5: Career & Internship',
+          title: 'Portfolio & Interview Preparation',
+          status: 'Future',
+          items: ['GitHub README polish', 'Resume optimization', 'Mock interviews & applications'],
+        },
+      ],
+    };
 
     const prompt = `Generate a 5-phase career roadmap toward becoming a ${goalTitle} for a 2nd year student with skills: ${JSON.stringify(
       skills || []
     )}.`;
 
-    const geminiRes = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+    const { text } = await generateGeminiText({
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -87,16 +83,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
     });
 
-    const parsed = JSON.parse(geminiRes.text || '{}');
+    if (text) {
+      try {
+        const parsed = JSON.parse(text);
+        return res.status(200).json({
+          success: true,
+          ...parsed,
+        });
+      } catch (e) {
+        console.warn('AIRoadmap JSON parse warning, using fallback stages');
+      }
+    }
+
+    return res.status(200).json(fallbackData);
+  } catch (err: any) {
+    console.error('AIRoadmap Handler Error:', err);
     return res.status(200).json({
       success: true,
-      ...parsed,
-    });
-  } catch (err: any) {
-    console.error('AIRoadmap Error:', err);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to generate roadmap. Please try again later.',
+      targetGoal: req.body?.goalTitle || 'AI/ML Engineer',
+      stages: [
+        {
+          phase: 'Phase 1',
+          title: 'Foundation & Core Skills',
+          status: 'In Progress',
+          items: ['C++ & Python OOP', 'Data Structures & Algorithms', 'Basic Machine Learning'],
+        },
+      ],
     });
   }
 }
+

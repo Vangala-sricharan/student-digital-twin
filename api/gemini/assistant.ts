@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getGeminiClient } from '../_lib/gemini';
+import { generateGeminiText } from '../_lib/gemini';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Set JSON Content-Type
+  // Set JSON Content-Type header
   res.setHeader('Content-Type', 'application/json');
 
   if (req.method !== 'POST') {
@@ -34,17 +34,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const ai = getGeminiClient();
-    if (!ai) {
-      const fallbackText = `[Gemini AI Offline Mode]\n\nBased on Vangala Sricharan's Student Digital Twin profile:\n- Current Career Readiness: ${context?.overallScore || context?.readinessScore || 75}%\n- Active Career Goal: AI/ML Engineer\n- Recommended Next Action: Strengthen Data Structures & Algorithms and build an ML Image Classifier model using Python & CNNs.\n\n(To enable live real-time Gemini responses, configure GEMINI_API_KEY in AI Studio Settings > Secrets or Vercel Environment Variables).`;
-
-      return res.status(200).json({
-        success: true,
-        response: fallbackText,
-        reply: fallbackText,
-      });
-    }
-
     const langInstruction =
       language === 'hi'
         ? 'Respond in Hindi (हिंदी).'
@@ -65,8 +54,7 @@ Analyze the provided Student Digital Twin state carefully:
 
 Provide actionable, supportive, encouraging, and specific guidance. Never guarantee employment or job offers. ${langInstruction}`;
 
-    const geminiRes = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+    const { text, error } = await generateGeminiText({
       contents: question,
       config: {
         systemInstruction,
@@ -74,18 +62,29 @@ Provide actionable, supportive, encouraging, and specific guidance. Never guaran
       },
     });
 
-    const replyText = geminiRes.text || 'No response generated.';
+    if (text) {
+      return res.status(200).json({
+        success: true,
+        response: text,
+        reply: text,
+      });
+    }
+
+    // Fallback advisory response if Gemini API key missing or quota temporarily reached
+    const fallbackText = `[Digital Twin Career Advisory]\n\nHello Sricharan! Based on your active Student Digital Twin profile:\n- Target Goal: AI/ML Engineer (Marwadi University, B.Tech CSE AI/ML)\n- Current Readiness: ${context?.overallScore || context?.readinessScore || 75}%\n\nKey Strategic Next Steps:\n1. Strengthen Data Structures & Algorithms (C++ / Python) to reach 85%+ readiness.\n2. Build & deploy a Computer Vision / CNN Image Classifier project to GitHub.\n3. Keep practicing competitive coding problems and update your resume checklist.\n\n(${error || 'Live Gemini AI service is currently in offline mode.'})`;
 
     return res.status(200).json({
       success: true,
-      response: replyText,
-      reply: replyText,
+      response: fallbackText,
+      reply: fallbackText,
     });
   } catch (err: any) {
-    console.error('Gemini Assistant Serverless Function Error:', err);
-    return res.status(500).json({
-      success: false,
-      error: 'AI Career Assistant is temporarily unavailable. Please try again later.',
+    console.error('Gemini Assistant Handler Error:', err);
+    return res.status(200).json({
+      success: true,
+      response: 'AI Career Assistant is temporarily in offline mode. Please review your Student Digital Twin dashboard for current career progress metrics.',
+      reply: 'AI Career Assistant is temporarily in offline mode. Please review your Student Digital Twin dashboard for current career progress metrics.',
     });
   }
 }
+
