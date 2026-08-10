@@ -100,7 +100,13 @@ export const AIRoadmapPage: React.FC<AIRoadmapPageProps> = ({ state }) => {
         }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (e) {
+        console.error('Failed to parse AI Roadmap response');
+      }
+
       if (res.ok && data.stages) {
         setStages(data.stages);
       }

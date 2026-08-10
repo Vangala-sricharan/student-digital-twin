@@ -95,15 +95,21 @@ export const AICareerAssistantPage: React.FC<AICareerAssistantPageProps> = ({ st
         }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        throw new Error('AI Career Assistant is temporarily unavailable.');
+      }
+
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to fetch AI response');
+        throw new Error(data.error || 'AI Career Assistant is temporarily unavailable.');
       }
 
       const aiMsg: Message = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
-        text: data.response || 'No response returned from Gemini.',
+        text: data.response || data.reply || 'No response returned from Gemini.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 

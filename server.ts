@@ -27,18 +27,31 @@ function getGeminiClient(): GoogleGenAI | null {
 }
 
 // 1. AI Career Assistant Route
-app.post('/api/gemini/assistant', async (req: Request, res: Response) => {
+app.post(['/api/gemini/assistant', '/api/ai/career-assistant'], async (req: Request, res: Response) => {
   try {
-    const { question, context, language = 'en' } = req.body;
+    const body = req.body || {};
+    let question = body.question;
+    let context = body.context;
+    const language = body.language || 'en';
+
+    if (!question && Array.isArray(body.messages) && body.messages.length > 0) {
+      const lastUserMsg = [...body.messages].reverse().find((m: any) => m.role === 'user' || m.sender === 'user');
+      question = lastUserMsg?.content || lastUserMsg?.text || '';
+    }
+    if (!context && body.profileContext) {
+      context = body.profileContext;
+    }
+
     if (!question) {
       return res.status(400).json({ error: 'Question is required' });
     }
 
     const ai = getGeminiClient();
     if (!ai) {
-      // Graceful fallback response when API key is missing or placeholder
+      const fallbackText = `[Gemini AI Offline Mode]\n\nBased on Vangala Sricharan's Student Digital Twin profile:\n- Current Career Readiness: ${context?.overallScore || context?.readinessScore || 75}%\n- Active Career Goal: AI/ML Engineer\n- Recommended Next Action: Strengthen Data Structures & Algorithms and build an ML Image Classifier model using Python & CNNs.\n\n(To enable live real-time Gemini responses, configure GEMINI_API_KEY in AI Studio Settings > Secrets).`;
       return res.json({
-        response: `[Gemini AI Offline Mode]\n\nBased on Vangala Sricharan's Student Digital Twin profile:\n- Current Career Readiness: ${context?.overallScore || 68}%\n- Active Career Goal: AI/ML Engineer\n- Recommended Next Action: Strengthen Data Structures & Algorithms and build an ML Image Classifier model using Python & CNNs.\n\n(To enable live real-time Gemini responses, configure GEMINI_API_KEY in AI Studio Settings > Secrets).`,
+        response: fallbackText,
+        reply: fallbackText,
       });
     }
 
@@ -54,7 +67,7 @@ app.post('/api/gemini/assistant', async (req: Request, res: Response) => {
     const systemInstruction = `You are the AI Career Assistant for Student Digital Twin, powering career advisory for Vangala Sricharan (B.Tech CSE AI/ML, Marwadi University, 2nd Year).
 Target Goal: AI/ML Engineer.
 Analyze the provided Student Digital Twin state carefully:
-- Overall Score: ${context?.overallScore || 'N/A'}%
+- Overall Score: ${context?.overallScore || context?.readinessScore || 'N/A'}%
 - Top Skills: ${JSON.stringify(context?.skills || [])}
 - Projects: ${JSON.stringify(context?.projects || [])}
 - Skill Gaps: ${JSON.stringify(context?.skillGaps || [])}
@@ -71,7 +84,8 @@ Provide actionable, supportive, encouraging, and specific guidance. Never guaran
       },
     });
 
-    return res.json({ response: response.text || 'No response generated.' });
+    const replyText = response.text || 'No response generated.';
+    return res.json({ response: replyText, reply: replyText });
   } catch (err: any) {
     console.error('API Assistant Error:', err);
     return res.status(500).json({ error: 'Failed to generate response. Please try again later.' });

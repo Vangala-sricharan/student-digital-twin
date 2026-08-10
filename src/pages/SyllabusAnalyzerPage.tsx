@@ -76,9 +76,15 @@ MODULE 3: DATABASE MANAGEMENT SYSTEMS & SQL
         }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (e) {
+        throw new Error('Syllabus Analyzer is temporarily unavailable.');
+      }
+
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to generate study roadmap');
+        throw new Error(data.error || 'Syllabus Analyzer is temporarily unavailable.');
       }
 
       setResult(data);

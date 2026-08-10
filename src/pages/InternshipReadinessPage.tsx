@@ -55,14 +55,11 @@ export const InternshipReadinessPage: React.FC<InternshipReadinessPageProps> = (
     setAiError(null);
 
     try {
-      const response = await fetch('/api/ai/career-assistant', {
+      const response = await fetch('/api/gemini/assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [
-            {
-              role: 'user',
-              content: `Give me a concise 3-paragraph executive AI analysis of my Internship Readiness score of ${result.overallScore}/100 (${result.statusLabel}).
+          question: `Give me a concise 3-paragraph executive AI analysis of my Internship Readiness score of ${result.overallScore}/100 (${result.statusLabel}).
 
 My Category Breakdown:
 ${result.categoryScores.map((c) => `- ${c.name}: ${c.score}% (${c.explanation})`).join('\n')}
@@ -71,25 +68,29 @@ Top Strengths: ${result.strongestAreas.map((s) => `${s.name} (${s.score}%)`).joi
 Key Blockers: ${result.biggestBlockers.map((b) => `${b.name} (${b.score}%)`).join(', ')}
 
 Please provide specific, high-leverage strategic advice to reach 90+ readiness for top tech summer internships.`,
-            },
-          ],
-          profileContext: {
-            profile: state.profile,
+          context: {
+            overallScore: result.overallScore,
+            categoryScores: result.categoryScores,
             skills: state.skills,
             projects: state.projects,
             achievements: state.achievements,
-            readinessScore: result.overallScore,
           },
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate AI analysis');
+      let data: any = {};
+      try {
+        data = await response.json();
+      } catch (parseErr) {
+        throw new Error('AI analysis is temporarily unavailable.');
       }
 
-      const data = await response.json();
-      if (data.reply) {
-        setAiAnalysis(data.reply);
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate AI analysis');
+      }
+
+      if (data.reply || data.response) {
+        setAiAnalysis(data.reply || data.response);
       } else {
         throw new Error('Invalid response format');
       }

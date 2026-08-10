@@ -60,9 +60,15 @@ export const ProjectAnalyzerPage: React.FC = () => {
         }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (e) {
+        throw new Error('Project Analyzer is temporarily unavailable.');
+      }
+
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to analyze project');
+        throw new Error(data.error || 'Project Analyzer is temporarily unavailable.');
       }
 
       setResult(data);

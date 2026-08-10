@@ -82,9 +82,15 @@ ACHIEVEMENTS & CERTIFICATIONS:
         body: JSON.stringify({ resumeText }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (e) {
+        throw new Error('Resume Analyzer is temporarily unavailable.');
+      }
+
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to analyze resume');
+        throw new Error(data.error || 'Resume Analyzer is temporarily unavailable.');
       }
 
       setResult(data);
