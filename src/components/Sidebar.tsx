@@ -151,9 +151,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Student Identity Badge */}
-        <div className="mt-4 rounded-2xl bg-slate-100/80 dark:bg-white/5 p-3 border border-slate-200/60 dark:border-white/10">
+        <div className="mt-4 rounded-2xl bg-sky-50/80 dark:bg-white/5 p-3 border border-sky-100/80 dark:border-white/10">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 text-white font-bold text-xs shadow-md">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-sky-500 to-blue-600 text-white font-bold text-xs shadow-md shadow-sky-500/20">
               {profile.name.charAt(0)}
             </div>
             <div className="min-w-0 flex-1">
@@ -189,10 +189,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       group flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-200
                       ${
                         isActive
-                          ? 'bg-cyan-500/10 text-cyan-600 dark:bg-white/10 dark:text-cyan-400 font-bold border border-cyan-500/20 dark:border-white/10 shadow-sm'
+                          ? 'bg-sky-500/15 text-sky-700 dark:bg-white/10 dark:text-cyan-400 font-bold border border-sky-300/40 dark:border-white/10 shadow-sm'
                           : item.highlight
-                          ? 'bg-gradient-to-r from-cyan-500/10 to-blue-600/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-bold hover:from-cyan-500/20 hover:to-blue-600/20'
-                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
+                          ? 'bg-gradient-to-r from-sky-500/10 to-blue-600/10 text-sky-600 dark:text-cyan-400 border border-sky-300/30 font-bold hover:from-sky-500/20 hover:to-blue-600/20'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-sky-50/60 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
                       }
                     `}
                   >
@@ -200,9 +200,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <Icon
                         className={`h-4 w-4 transition-transform group-hover:scale-110 ${
                           isActive
-                            ? 'text-cyan-600 dark:text-cyan-400'
+                            ? 'text-sky-600 dark:text-cyan-400'
                             : item.highlight
-                            ? 'text-cyan-500'
+                            ? 'text-sky-500'
                             : 'text-slate-400 dark:text-slate-500'
                         }`}
                       />
@@ -260,7 +260,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Desktop Sidebar */}
       <aside
         id={id}
-        className="hidden lg:flex w-64 flex-col fixed inset-y-0 left-0 z-30 bg-white/80 dark:bg-[#070D19]/90 backdrop-blur-2xl border-r border-slate-200/80 dark:border-white/10 transition-colors"
+        className="hidden lg:flex w-64 flex-col fixed inset-y-0 left-0 z-30 glass-sidebar transition-colors"
       >
         {sidebarContent}
       </aside>
@@ -270,9 +270,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
             onClick={() => setIsMobileOpen(false)}
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-slate-950/70 backdrop-blur-md"
           />
-          <aside className="fixed inset-y-0 left-0 w-72 bg-white dark:bg-[#070D19] border-r border-white/10 shadow-2xl z-10 overflow-y-auto">
+          <aside className="fixed inset-y-0 left-0 w-72 glass-sidebar border-r border-white/10 shadow-2xl z-10 overflow-y-auto">
             {sidebarContent}
           </aside>
         </div>

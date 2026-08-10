@@ -50,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header
       id={id}
-      className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-[#070D19]/80 backdrop-blur-xl px-4 sm:px-6 lg:px-8 transition-colors"
+      className="sticky top-0 z-20 flex h-16 items-center justify-between glass-header px-4 sm:px-6 lg:px-8 transition-colors"
     >
       {/* Left: Mobile Toggle & Greeting */}
       <div className="flex items-center gap-3">

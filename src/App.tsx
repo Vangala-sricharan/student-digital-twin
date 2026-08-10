@@ -316,12 +316,12 @@ function MainAppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070D19] text-slate-900 dark:text-white font-sans transition-colors duration-300 relative selection:bg-cyan-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070D19] text-slate-900 dark:text-white font-sans transition-colors duration-300 relative selection:bg-sky-500 selection:text-white">
       {/* Background Ambient Mesh Lighting */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 dark:bg-blue-600/15 rounded-full blur-[120px] -mr-48 -mt-48" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-500/10 dark:bg-emerald-500/15 rounded-full blur-[100px] -ml-24 -mb-24" />
-        <div className="absolute top-1/2 left-1/3 w-[500px] h-[500px] bg-cyan-500/10 dark:bg-cyan-500/10 rounded-full blur-[140px]" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-sky-300/20 dark:bg-blue-600/15 rounded-full blur-[120px] -mr-48 -mt-48" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-400/15 dark:bg-emerald-500/15 rounded-full blur-[100px] -ml-24 -mb-24" />
+        <div className="absolute top-1/2 left-1/3 w-[500px] h-[500px] bg-sky-200/25 dark:bg-cyan-500/10 rounded-full blur-[140px]" />
       </div>
 
       <div className="relative z-10 flex min-h-screen">
