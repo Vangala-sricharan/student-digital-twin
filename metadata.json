@@ -1,0 +1,6 @@
+{
+  "name": "Student Digital Twin",
+  "description": "Personal student career-readiness platform & digital twin for Vangala Sricharan",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
