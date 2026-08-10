@@ -1,9 +1,11 @@
 import React from 'react';
-import { Menu, Search, Sparkles, RotateCcw, Globe, Sun, Moon, Zap, Users } from 'lucide-react';
+import { Menu, Search, Sparkles, RotateCcw, Globe, Sun, Moon, Zap } from 'lucide-react';
 import { StudentProfile, StudentRecord } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useSubscription } from '../context/SubscriptionContext';
+import { CloudSyncIndicator } from './CloudSyncIndicator';
+import { getISTGreeting } from '../utils/timeUtils';
 
 interface HeaderProps {
   profile: StudentProfile;
@@ -17,6 +19,7 @@ interface HeaderProps {
   activeStudentId?: string;
   onSelectStudent?: (id: string) => void;
   onNavigateToStudents?: () => void;
+  onOpenAuth?: () => void;
   id?: string;
 }
 
@@ -32,18 +35,15 @@ export const Header: React.FC<HeaderProps> = ({
   activeStudentId,
   onSelectStudent,
   onNavigateToStudents,
+  onOpenAuth,
   id,
 }) => {
-  const { language, setLanguage, languages, t } = useLanguage();
+  const { language, setLanguage, languages } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { plan, demoMode } = useSubscription();
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  };
+
+  const getGreeting = () => getISTGreeting();
 
   const firstName = profile.name.split(' ')[1] || profile.name.split(' ')[0] || 'Sricharan';
 
@@ -130,7 +130,11 @@ export const Header: React.FC<HeaderProps> = ({
           {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-700" />}
         </button>
 
+        {/* Cloud Sync Indicator */}
+        {onOpenAuth && <CloudSyncIndicator onOpenAuth={onOpenAuth} compact={true} />}
+
         {/* Plan / Demo Badge */}
+
         {onNavigateToUpgrade && (
           <button
             onClick={onNavigateToUpgrade}

@@ -273,6 +273,13 @@ export const INITIAL_RESUME_CHECKLIST: ResumeCheckitem[] = [
   { id: 'res-10', label: 'Data Structures & Competitive Programming handles linked', category: 'Profiles', checked: false },
 ];
 
+export const INITIAL_TASKS = [
+  { id: 'task-1', title: 'Solve 5 Data Structures & Algorithms problems in C++', category: 'Data Structures', priority: 'High' as const, dueDate: '2026-08-15', completed: true, notes: 'Arrays and String manipulation' },
+  { id: 'task-2', title: 'Complete Convolutional Neural Network (CNN) tutorial', category: 'AI/ML', priority: 'High' as const, dueDate: '2026-08-18', completed: false, notes: 'Focus on PyTorch / TensorFlow basics' },
+  { id: 'task-3', title: 'Upload C++ POS projects to GitHub with README.md', category: 'GitHub', priority: 'Medium' as const, dueDate: '2026-08-20', completed: false, notes: 'Add screenshots and execution instructions' },
+  { id: 'task-4', title: 'Practice 10 SQL queries on Join and Aggregations', category: 'Databases', priority: 'Medium' as const, dueDate: '2026-08-22', completed: false, notes: 'Subqueries and Group By' },
+];
+
 export const INITIAL_STATE: DigitalTwinState = {
   profile: INITIAL_PROFILE,
   skills: INITIAL_SKILLS,
@@ -316,4 +323,6 @@ export const INITIAL_STATE: DigitalTwinState = {
   ],
   resumeChecklist: INITIAL_RESUME_CHECKLIST,
   customRecommendations: [],
+  tasks: INITIAL_TASKS,
 };
+

@@ -29,6 +29,7 @@ import {
 import { ActiveTab } from '../components/Sidebar';
 import { useLanguage } from '../context/LanguageContext';
 import { useSubscription } from '../context/SubscriptionContext';
+import { getISTGreeting } from '../utils/timeUtils';
 
 interface DashboardPageProps {
   profile: StudentProfile;
@@ -88,7 +89,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              Good morning, {profile.name.split(' ')[1] || 'Sricharan'} 👋
+              {getISTGreeting()}, {profile.name.split(' ')[1] || profile.name.split(' ')[0] || 'Sricharan'} 👋
             </h1>
             <p className="mt-2 text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
               Your digital twin is tracking your journey toward becoming an{' '}

@@ -126,6 +126,26 @@ export interface ResumeCheckitem {
   checked: boolean;
 }
 
+export interface TaskItem {
+  id: string;
+  title: string;
+  category: string;
+  priority: PriorityLevel;
+  dueDate?: string;
+  completed: boolean;
+  notes?: string;
+}
+
+export interface AIConversationItem {
+  id: string;
+  feature: string;
+  question: string;
+  response: string;
+  createdAt: string;
+}
+
+export type CloudSyncStatus = 'synced' | 'saving' | 'offline' | 'local' | 'error';
+
 export interface DigitalTwinState {
   profile: StudentProfile;
   skills: Skill[];
@@ -136,6 +156,7 @@ export interface DigitalTwinState {
   progressHistory: ProgressSnapshot[];
   resumeChecklist: ResumeCheckitem[];
   customRecommendations: Recommendation[];
+  tasks?: TaskItem[];
 }
 
 export interface StudentRecord extends DigitalTwinState {
@@ -148,4 +169,5 @@ export interface MultiStudentState {
   students: StudentRecord[];
   activeStudentId: string;
 }
+
 

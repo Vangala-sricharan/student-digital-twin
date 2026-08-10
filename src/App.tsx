@@ -27,10 +27,15 @@ import { calculateCareerReadiness } from './services/scoringEngine';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
+import { useAuth } from './context/AuthContext';
 
 import { Sidebar, ActiveTab } from './components/Sidebar';
 import { Header } from './components/Header';
 import { UpgradeModal } from './components/UpgradeModal';
+import { AuthModal } from './components/AuthModal';
+import { MigrationBanner } from './components/MigrationBanner';
+import { ActionPlanner } from './components/ActionPlanner';
+import { PublicDigitalTwinPage } from './pages/PublicDigitalTwinPage';
 
 import { DashboardPage } from './pages/DashboardPage';
 import { ProfilePage } from './pages/ProfilePage';
@@ -44,6 +49,7 @@ import { ResumePage } from './pages/ResumePage';
 import { GitHubPage } from './pages/GitHubPage';
 import { AILabPage } from './pages/AILabPage';
 import { SettingsPage } from './pages/SettingsPage';
+
 
 // V2 AI Feature Pages
 import { AICareerAssistantPage } from './pages/AICareerAssistantPage';
@@ -60,8 +66,52 @@ function MainAppContent() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
 
   const { canAccess, upgradeModalOpen, setUpgradeModalOpen, requiredFeatureForModal } = useSubscription();
+  const { user, fetchCloudState, saveCloudState } = useAuth();
+
+  // Load Cloud State when user logs in
+  useEffect(() => {
+    if (user) {
+      fetchCloudState().then((cloudData) => {
+        if (cloudData) {
+          updateActiveStudent((prev) => ({
+            ...prev,
+            profile: cloudData.profile,
+            skills: cloudData.skills,
+            projects: cloudData.projects,
+            achievements: cloudData.achievements,
+            tasks: cloudData.tasks || prev.tasks || [],
+          }));
+        }
+      });
+    }
+  }, [user]);
+
+  // Task Mutators
+  const handleAddTask = (newTask: Omit<import('./types').TaskItem, 'id'>) => {
+    const taskWithId = { ...newTask, id: `task-${Date.now()}` };
+    updateActiveStudent((prev) => ({
+      ...prev,
+      tasks: [taskWithId, ...(prev.tasks || [])],
+    }));
+  };
+
+  const handleToggleTask = (id: string) => {
+    updateActiveStudent((prev) => ({
+      ...prev,
+      tasks: (prev.tasks || []).map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
+    }));
+  };
+
+  const handleDeleteTask = (id: string) => {
+    updateActiveStudent((prev) => ({
+      ...prev,
+      tasks: (prev.tasks || []).filter((t) => t.id !== id),
+    }));
+  };
+
 
   // Active Student computed from multiState
   const activeStudent = useMemo(() => {
@@ -301,9 +351,18 @@ function MainAppContent() {
             activeStudentId={multiState.activeStudentId}
             onSelectStudent={handleSelectStudent}
             onNavigateToStudents={() => setActiveTab('students')}
+            onOpenAuth={() => setAuthModalOpen(true)}
           />
 
           <main id="app-main-content" className="flex-1 px-4 sm:px-6 lg:px-8 pt-6 pb-12">
+            {/* V3 Migration Banner */}
+            <MigrationBanner
+              localState={activeStudent}
+              onMigrationComplete={() => {
+                fetchCloudState();
+              }}
+            />
+
             {activeTab === 'dashboard' && (
               <DashboardPage
                 profile={activeStudent.profile}
@@ -318,7 +377,25 @@ function MainAppContent() {
               />
             )}
 
+            {activeTab === 'action-planner' && (
+              <ActionPlanner
+                tasks={activeStudent.tasks || []}
+                onAddTask={handleAddTask}
+                onToggleTask={handleToggleTask}
+                onDeleteTask={handleDeleteTask}
+              />
+            )}
+
+            {activeTab === 'public-twin' && (
+              <PublicDigitalTwinPage
+                state={activeStudent}
+                overallScore={readinessResult.overallScore}
+                onBackToApp={() => setActiveTab('dashboard')}
+              />
+            )}
+
             {activeTab === 'profile' && (
+
               <ProfilePage
                 profile={activeStudent.profile}
                 onUpdateProfile={handleUpdateProfile}
@@ -454,6 +531,12 @@ function MainAppContent() {
         </div>
       </div>
 
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+      />
+
       {/* Upgrade Pro Modal */}
       <UpgradeModal
         isOpen={upgradeModalOpen}
@@ -461,6 +544,7 @@ function MainAppContent() {
         requiredFeature={requiredFeatureForModal}
         onNavigateToUpgrade={() => handleTabChange('upgrade')}
       />
+
     </div>
   );
 }

@@ -31,6 +31,8 @@ export type ActiveTab =
   | 'dashboard'
   | 'profile'
   | 'students'
+  | 'action-planner'
+  | 'public-twin'
   | 'skills'
   | 'projects'
   | 'achievements'
@@ -46,6 +48,7 @@ export type ActiveTab =
   | 'github'
   | 'upgrade'
   | 'settings';
+
 
 
 interface SidebarProps {
@@ -82,6 +85,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title: t('nav_main'),
       items: [
         { id: 'dashboard', label: t('nav_dashboard'), icon: LayoutDashboard },
+        { id: 'action-planner', label: '🎯 Action Planner', icon: Target },
+        { id: 'public-twin', label: '🌐 Public Twin View', icon: Sparkles },
         { id: 'profile', label: t('nav_profile'), icon: User },
         { id: 'students', label: '👥 Student Profiles', icon: Users },
         { id: 'skills', label: t('nav_skills'), icon: Cpu },
@@ -91,6 +96,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'progress', label: t('nav_progress'), icon: TrendingUp },
       ],
     },
+
     {
       title: t('nav_ai_os'),
       items: [
