@@ -38,11 +38,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    // Clean up /auth/callback URL path after OAuth redirect if present
-    if (typeof window !== 'undefined' && window.location.pathname === '/auth/callback') {
-      window.history.replaceState({}, document.title, '/' + window.location.search + window.location.hash);
-    }
-
     // Get current active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -53,6 +48,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCloudSyncStatus('local');
       }
       setLoading(false);
+
+      if (typeof window !== 'undefined' && window.location.pathname === '/auth/callback') {
+        window.history.replaceState({}, document.title, '/');
+      }
     });
 
     // Listen to Auth changes
@@ -65,6 +64,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCloudSyncStatus('local');
       }
       setLoading(false);
+
+      if (typeof window !== 'undefined' && window.location.pathname === '/auth/callback') {
+        window.history.replaceState({}, document.title, '/');
+      }
     });
 
     return () => {
