@@ -1,5 +1,5 @@
-import React from 'react';
-import { Sparkles, Check, Zap, Shield, Bot, FileText, BookOpen, Sliders, Briefcase, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Check, Zap, Shield, Bot, FileText, BookOpen, Sliders, Briefcase, RefreshCw, QrCode, Copy, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import { GlassCard } from '../components/GlassCard';
 import { useSubscription, PlanType } from '../context/SubscriptionContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -7,6 +7,38 @@ import { useLanguage } from '../context/LanguageContext';
 export const UpgradePage: React.FC = () => {
   const { plan, setPlan, demoMode, toggleDemoMode } = useSubscription();
   const { t } = useLanguage();
+
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [countdown, setCountdown] = useState(23);
+  const [simulationComplete, setSimulationComplete] = useState(false);
+  const [copiedUPI, setCopiedUPI] = useState(false);
+
+  const upiId = '9391700862@ybl';
+
+  useEffect(() => {
+    let timer: any;
+    if (isSimulating && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    } else if (isSimulating && countdown === 0) {
+      setIsSimulating(false);
+      setSimulationComplete(true);
+    }
+    return () => clearInterval(timer);
+  }, [isSimulating, countdown]);
+
+  const handleStartSimulation = () => {
+    setIsSimulating(true);
+    setCountdown(23);
+    setSimulationComplete(false);
+  };
+
+  const handleCopyUPI = () => {
+    navigator.clipboard.writeText(upiId);
+    setCopiedUPI(true);
+    setTimeout(() => setCopiedUPI(false), 2000);
+  };
 
   const handleSelectPlan = (selectedPlan: PlanType) => {
     setPlan(selectedPlan);
@@ -274,6 +306,137 @@ export const UpgradePage: React.FC = () => {
               </tr>
             </tbody>
           </table>
+        </div>
+      </GlassCard>
+
+      {/* Payment Demonstration Section */}
+      <GlassCard className="p-6 border-sky-300/60 dark:border-sky-500/30">
+        <div className="flex flex-col md:flex-row items-center gap-6">
+          {/* QR Code Graphic representing UPI ID 9391700862@ybl */}
+          <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-md flex flex-col items-center shrink-0">
+            <div className="p-2 bg-slate-900 rounded-xl mb-2 text-white text-[10px] font-bold tracking-widest uppercase">
+              UPI QR CODE
+            </div>
+            <svg className="h-32 w-32" viewBox="0 0 100 100" fill="none">
+              <rect x="5" y="5" width="28" height="28" rx="4" fill="#0f172a" />
+              <rect x="9" y="9" width="20" height="20" rx="2" fill="#ffffff" />
+              <rect x="13" y="13" width="12" height="12" rx="1" fill="#0f172a" />
+
+              <rect x="67" y="5" width="28" height="28" rx="4" fill="#0f172a" />
+              <rect x="71" y="9" width="20" height="20" rx="2" fill="#ffffff" />
+              <rect x="75" y="13" width="12" height="12" rx="1" fill="#0f172a" />
+
+              <rect x="5" y="67" width="28" height="28" rx="4" fill="#0f172a" />
+              <rect x="9" y="71" width="20" height="20" rx="2" fill="#ffffff" />
+              <rect x="13" y="75" width="12" height="12" rx="1" fill="#0f172a" />
+
+              {/* QR Pattern dots */}
+              <rect x="38" y="8" width="8" height="8" rx="1" fill="#0284c7" />
+              <rect x="50" y="8" width="10" height="8" rx="1" fill="#0f172a" />
+              <rect x="38" y="20" width="12" height="8" rx="1" fill="#0f172a" />
+              <rect x="54" y="20" width="8" height="8" rx="1" fill="#0284c7" />
+
+              <rect x="8" y="38" width="8" height="12" rx="1" fill="#0f172a" />
+              <rect x="20" y="38" width="12" height="8" rx="1" fill="#0284c7" />
+              <rect x="8" y="54" width="12" height="8" rx="1" fill="#0f172a" />
+
+              <rect x="38" y="38" width="24" height="24" rx="2" fill="#0f172a" />
+              <rect x="42" y="42" width="16" height="16" rx="1" fill="#0284c7" />
+
+              <rect x="68" y="38" width="10" height="12" rx="1" fill="#0f172a" />
+              <rect x="82" y="38" width="10" height="8" rx="1" fill="#0284c7" />
+
+              <rect x="38" y="68" width="12" height="10" rx="1" fill="#0f172a" />
+              <rect x="54" y="68" width="10" height="12" rx="1" fill="#0f172a" />
+              <rect x="68" y="68" width="12" height="12" rx="1" fill="#0284c7" />
+              <rect x="84" y="68" width="8" height="24" rx="1" fill="#0f172a" />
+              <rect x="38" y="82" width="24" height="10" rx="1" fill="#0284c7" />
+            </svg>
+            <span className="text-[11px] font-bold text-slate-800 mt-2">Scan to Pay</span>
+          </div>
+
+          {/* Details & Simulation Button */}
+          <div className="space-y-4 flex-1">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-300/40">
+                DEMONSTRATION PAYMENT UI
+              </span>
+              <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                UPI Payment & Demo Simulation
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                You can test the payment workflow using the demonstration simulator below.
+              </p>
+            </div>
+
+            {/* UPI ID box */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+              <div className="flex-1">
+                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block">
+                  Demonstration UPI ID
+                </span>
+                <span className="text-sm font-mono font-bold text-slate-900 dark:text-white">
+                  {upiId}
+                </span>
+              </div>
+              <button
+                onClick={handleCopyUPI}
+                className="px-3 py-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 font-semibold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                {copiedUPI ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                <span>{copiedUPI ? 'Copied' : 'Copy UPI'}</span>
+              </button>
+            </div>
+
+            {/* Simulation Status & Trigger */}
+            <div className="space-y-3">
+              {!isSimulating && !simulationComplete && (
+                <button
+                  onClick={handleStartSimulation}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-sky-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <Clock className="h-4 w-4" />
+                  <span>Start 23-Second Demo Payment Simulation</span>
+                </button>
+              )}
+
+              {isSimulating && (
+                <div className="p-4 rounded-xl bg-sky-500/10 border border-sky-300/60 dark:border-sky-500/40 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-sky-700 dark:text-sky-300">
+                    <span className="flex items-center gap-2">
+                      <RefreshCw className="h-4 w-4 animate-spin text-sky-500" />
+                      <span>Demo Payment Simulation Processing...</span>
+                    </span>
+                    <span className="font-mono text-sm">{countdown}s remaining</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-sky-500 to-blue-600 transition-all duration-1000"
+                      style={{ width: `${((23 - countdown) / 23) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {simulationComplete && (
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-800 dark:text-amber-200 space-y-2 animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-300">
+                    <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+                    <span>DEMO ONLY — NO REAL PAYMENT WAS VERIFIED</span>
+                  </div>
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                    Demo payment simulation completed. Please note that this is a UI demonstration only — no financial transaction occurred, no money was received, and no account was debited.
+                  </p>
+                  <button
+                    onClick={handleStartSimulation}
+                    className="text-xs font-bold text-sky-600 dark:text-sky-400 underline hover:text-sky-500 pt-1 block"
+                  >
+                    Run Simulation Again
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </GlassCard>
     </div>

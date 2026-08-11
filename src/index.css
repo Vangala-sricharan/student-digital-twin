@@ -8,12 +8,12 @@
   }
   
   body {
-    @apply antialiased text-slate-800 dark:text-slate-100 bg-gradient-to-br from-slate-50 via-blue-50/50 to-sky-50/70 dark:bg-slate-950 selection:bg-sky-500 selection:text-white min-h-screen;
+    @apply antialiased text-slate-800 dark:text-[#F5F9FF] bg-gradient-to-br from-slate-50 via-blue-50/50 to-sky-50/70 dark:bg-[#050B14] selection:bg-sky-500 selection:text-white min-h-screen;
   }
 }
 
 @layer utilities {
-  /* Professional Light Blue + White Glassmorphism Utilities */
+  /* Professional Light Blue + Deep Navy Glassmorphism Utilities */
   .glass-panel {
     background: rgba(255, 255, 255, 0.78);
     backdrop-filter: blur(16px);
@@ -22,9 +22,11 @@
     box-shadow: 0 10px 30px -5px rgba(14, 165, 233, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
   }
   :where(.dark, .dark *) .glass-panel {
-    background: rgba(15, 23, 42, 0.70);
-    border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    background: rgba(11, 22, 38, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-color: rgba(56, 189, 248, 0.14);
+    box-shadow: 0 10px 32px 0 rgba(0, 0, 0, 0.6), 0 0 1px 1px rgba(56, 189, 248, 0.05);
   }
 
   .glass-card {
@@ -36,9 +38,11 @@
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
   :where(.dark, .dark *) .glass-card {
-    background: rgba(15, 23, 42, 0.60);
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
+    background: rgba(11, 22, 38, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-color: rgba(56, 189, 248, 0.12);
+    box-shadow: 0 8px 24px -2px rgba(0, 0, 0, 0.5);
   }
 
   .glass-card-hover:hover {
@@ -48,9 +52,9 @@
     transform: translateY(-2px);
   }
   :where(.dark, .dark *) .glass-card-hover:hover {
-    background: rgba(30, 41, 59, 0.70);
-    border-color: rgba(56, 189, 248, 0.3);
-    box-shadow: 0 8px 25px -3px rgba(6, 182, 212, 0.15);
+    background: rgba(16, 29, 48, 0.90);
+    border-color: rgba(56, 189, 248, 0.35);
+    box-shadow: 0 12px 32px -4px rgba(2, 132, 199, 0.25);
   }
 
   .glass-header {
@@ -61,8 +65,11 @@
     box-shadow: 0 2px 15px -3px rgba(14, 165, 233, 0.05);
   }
   :where(.dark, .dark *) .glass-header {
-    background: rgba(10, 15, 29, 0.80);
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    background: rgba(5, 11, 20, 0.90);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom-color: rgba(56, 189, 248, 0.14);
+    box-shadow: 0 4px 25px -2px rgba(0, 0, 0, 0.6);
   }
 
   .glass-sidebar {
@@ -73,8 +80,11 @@
     box-shadow: 2px 0 20px -4px rgba(14, 165, 233, 0.05);
   }
   :where(.dark, .dark *) .glass-sidebar {
-    background: rgba(7, 13, 25, 0.88);
-    border-right-color: rgba(255, 255, 255, 0.08);
+    background: rgba(5, 11, 20, 0.94);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-right-color: rgba(56, 189, 248, 0.12);
+    box-shadow: 4px 0 25px -2px rgba(0, 0, 0, 0.6);
   }
 
   .glass-input {
@@ -92,9 +102,14 @@
     outline: none;
   }
   :where(.dark, .dark *) .glass-input {
-    background: rgba(15, 23, 42, 0.6);
-    border-color: rgba(255, 255, 255, 0.12);
-    color: #f8fafc;
+    background: rgba(11, 22, 38, 0.75);
+    border-color: rgba(56, 189, 248, 0.18);
+    color: #f5f9ff;
+  }
+  :where(.dark, .dark *) .glass-input:focus {
+    background: rgba(16, 29, 48, 0.90);
+    border-color: rgba(56, 189, 248, 0.5);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
   }
 
   .glass-button-primary {
@@ -121,10 +136,16 @@
     color: #0369a1;
   }
   :where(.dark, .dark *) .glass-badge {
-    background: rgba(56, 189, 248, 0.1);
+    background: rgba(14, 165, 233, 0.12);
     border-color: rgba(56, 189, 248, 0.25);
     color: #38bdf8;
   }
+}
+
+/* Select option styles in dark mode */
+:where(.dark, .dark *) option {
+  background-color: #0b1626 !important;
+  color: #f5f9ff !important;
 }
 
 /* Custom Light Blue Glass Scrollbars */
@@ -137,12 +158,24 @@
   background: rgba(224, 242, 254, 0.3);
 }
 
+:where(.dark, .dark *) ::-webkit-scrollbar-track {
+  background: rgba(5, 11, 20, 0.5);
+}
+
 ::-webkit-scrollbar-thumb {
   background: rgba(186, 230, 253, 0.8);
   border-radius: 9999px;
 }
 
+:where(.dark, .dark *) ::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.3);
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(2, 132, 199, 0.5);
+}
+
+:where(.dark, .dark *) ::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.6);
 }
 

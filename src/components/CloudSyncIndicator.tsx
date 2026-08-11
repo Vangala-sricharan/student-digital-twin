@@ -18,9 +18,9 @@ export const CloudSyncIndicator: React.FC<CloudSyncIndicatorProps> = ({
       <button
         onClick={onOpenAuth}
         title="Connect Supabase Cloud Account to sync across devices"
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100/90 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-cyan-500/40 hover:text-cyan-600 dark:hover:text-cyan-400 text-xs font-semibold transition-all cursor-pointer"
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100/90 dark:bg-[#0B1626] border border-slate-200 dark:border-sky-500/30 text-slate-800 dark:text-[#F5F9FF] hover:bg-slate-200 dark:hover:bg-[#101D30] hover:text-cyan-600 dark:hover:text-cyan-300 active:scale-95 text-xs font-bold transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
       >
-        <LogIn className="h-3.5 w-3.5 text-cyan-500" />
+        <LogIn className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
         <span className={compact ? 'hidden sm:inline' : 'inline'}>
           {isCloudConfigured ? 'Sign In / Cloud Sync' : 'Local Mode'}
         </span>

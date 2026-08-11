@@ -23,7 +23,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md">
-      <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white/90 dark:bg-[#0A1224]/90 backdrop-blur-2xl border border-slate-200/80 dark:border-white/10 shadow-2xl p-6 sm:p-8">
+      <div className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white/90 dark:bg-[#0B1626]/95 backdrop-blur-2xl border border-slate-200/80 dark:border-sky-500/20 shadow-2xl p-6 sm:p-8">
         <div className="absolute top-0 right-0 p-4">
           <button
             onClick={onClose}

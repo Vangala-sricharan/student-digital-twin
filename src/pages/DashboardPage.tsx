@@ -133,10 +133,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             label="Career Readiness"
             subLabel={`${overallScore >= 70 ? 'Strong Alignment' : 'Active Growth Phase'}`}
           />
-          <div className="mt-4 flex items-center justify-center gap-2">
+          <div className="mt-4 space-y-2 text-center w-full">
+            <div className="p-2.5 rounded-xl bg-slate-100/80 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-xs">
+              <p className="font-bold text-slate-800 dark:text-slate-200">
+                Why your score is {overallScore}:
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-[#B7C4D6] mt-0.5">
+                Evaluated across {skills.length} skills, {completedProjects} completed projects & {categoryScores.length} readiness dimensions.
+              </p>
+            </div>
             <button
               onClick={() => setActiveTab('career-goals')}
-              className="text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:underline flex items-center justify-center gap-1 w-full"
             >
               <span>View Goal Requirements</span>
               <ChevronRight className="h-3.5 w-3.5" />
@@ -144,6 +152,39 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
         </GlassCard>
       </div>
+
+      {/* 🎯 PROMINENT NEXT BEST ACTION CARD */}
+      <GlassCard glow="cyan" className="p-6 border-cyan-500/30 bg-gradient-to-r from-sky-500/10 via-blue-600/10 to-indigo-600/10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1.5 max-w-2xl">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 text-xs font-black border border-cyan-500/30">
+              <Target className="h-3.5 w-3.5" />
+              <span>🎯 YOUR NEXT BEST ACTION</span>
+            </div>
+            <h3 className="text-lg font-black text-slate-900 dark:text-[#F5F9FF]">
+              {recommendations[0]?.action || 'Complete your GitHub & OOP C++ Project Documentation'}
+            </h3>
+            <p className="text-xs text-slate-600 dark:text-[#B7C4D6] leading-relaxed">
+              {recommendations[0]?.reason || 'Strengthen your core engineering project portfolio to improve career readiness and tier-1 company alignment.'}
+            </p>
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-md border border-emerald-500/20">
+                Potential Score Increase: +6 pts
+              </span>
+            </div>
+          </div>
+
+          <div className="shrink-0">
+            <button
+              onClick={() => setActiveTab('action-planner')}
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-sky-600/25 flex items-center gap-2 transition-all cursor-pointer"
+            >
+              <span>Start Action →</span>
+              <ArrowUpRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </GlassCard>
 
       {/* V2 QUICK AI OS LAUNCHPAD */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

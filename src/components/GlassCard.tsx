@@ -33,12 +33,12 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       onClick={onClick}
       className={`
         relative overflow-hidden rounded-3xl
-        bg-white/80 dark:bg-slate-900/60
+        bg-white/80 dark:bg-[#0B1626]/80
         backdrop-blur-2xl
-        border border-sky-100/90 dark:border-white/10
-        shadow-lg shadow-sky-900/5 dark:shadow-2xl dark:shadow-black/50
+        border border-sky-100/90 dark:border-sky-500/15
+        shadow-lg shadow-sky-900/5 dark:shadow-2xl dark:shadow-black/60
         transition-all duration-300
-        ${hoverEffect ? 'hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-900/12 hover:bg-white/95 dark:hover:bg-slate-800/70 hover:border-sky-300/80 dark:hover:border-cyan-500/30' : ''}
+        ${hoverEffect ? 'hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-900/12 hover:bg-white/95 dark:hover:bg-[#101D30]/90 hover:border-sky-300/80 dark:hover:border-cyan-500/35' : ''}
         ${glowMap[glow]}
         ${onClick ? 'cursor-pointer' : ''}
         ${className}

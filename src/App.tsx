@@ -25,7 +25,7 @@ import {
 import { calculateCareerReadiness } from './services/scoringEngine';
 
 import { LanguageProvider } from './context/LanguageContext';
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
 import { useAuth } from './context/AuthContext';
 
@@ -35,6 +35,8 @@ import { UpgradeModal } from './components/UpgradeModal';
 import { AuthModal } from './components/AuthModal';
 import { MigrationBanner } from './components/MigrationBanner';
 import { ActionPlanner } from './components/ActionPlanner';
+import { PublicLandingPage } from './pages/PublicLandingPage';
+import { OnboardingWizard } from './components/OnboardingWizard';
 import { PublicDigitalTwinPage } from './pages/PublicDigitalTwinPage';
 
 import { DashboardPage } from './pages/DashboardPage';
@@ -50,7 +52,6 @@ import { GitHubPage } from './pages/GitHubPage';
 import { AILabPage } from './pages/AILabPage';
 import { SettingsPage } from './pages/SettingsPage';
 
-
 // V2 AI Feature Pages
 import { AICareerAssistantPage } from './pages/AICareerAssistantPage';
 import { ResumeAnalyzerPage } from './pages/ResumeAnalyzerPage';
@@ -61,33 +62,60 @@ import { InternshipReadinessPage } from './pages/InternshipReadinessPage';
 import { CareerSimulatorPage } from './pages/CareerSimulatorPage';
 import { UpgradePage } from './pages/UpgradePage';
 
+import { PlayCircle, LogIn, UserPlus, Sparkles, LogOut, Shield } from 'lucide-react';
+
 function MainAppContent() {
   const [multiState, setMultiState] = useState<MultiStudentState>(() => loadMultiStudentState());
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
+  const [authDefaultMode, setAuthDefaultMode] = useState<'signin' | 'signup'>('signin');
+
+  // Demo session state: when user clicks "Try Demo"
+  const [isDemoSession, setIsDemoSession] = useState<boolean>(false);
+  // Onboarding state for new user
+  const [needsOnboarding, setNeedsOnboarding] = useState<boolean>(false);
 
   const { canAccess, upgradeModalOpen, setUpgradeModalOpen, requiredFeatureForModal } = useSubscription();
-  const { user, fetchCloudState, saveCloudState } = useAuth();
+  const { user, fetchCloudState, saveCloudState, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   // Load Cloud State when user logs in
   useEffect(() => {
     if (user) {
       fetchCloudState().then((cloudData) => {
-        if (cloudData) {
+        if (cloudData && cloudData.profile && cloudData.profile.name) {
+          // User already has saved profile
+          setNeedsOnboarding(false);
           updateActiveStudent((prev) => ({
             ...prev,
             profile: cloudData.profile,
-            skills: cloudData.skills,
-            projects: cloudData.projects,
-            achievements: cloudData.achievements,
+            skills: cloudData.skills || [],
+            projects: cloudData.projects || [],
+            achievements: cloudData.achievements || [],
             tasks: cloudData.tasks || prev.tasks || [],
           }));
+        } else {
+          // New user needs onboarding wizard
+          setNeedsOnboarding(true);
         }
       });
+    } else {
+      setNeedsOnboarding(false);
     }
   }, [user]);
+
+  // Handle Onboarding completion
+  const handleOnboardingComplete = (newState: DigitalTwinState) => {
+    setNeedsOnboarding(false);
+    const newRecord: StudentRecord = {
+      id: `usr-${Date.now()}`,
+      ...newState,
+    };
+    handleAddStudent(newRecord);
+    saveCloudState(newState);
+  };
 
   // Task Mutators
   const handleAddTask = (newTask: Omit<import('./types').TaskItem, 'id'>) => {
@@ -315,8 +343,70 @@ function MainAppContent() {
     }
   };
 
+  // 1. If not logged in and not in demo mode -> render Public Landing Page
+  if (!user && !isDemoSession) {
+    return (
+      <>
+        <PublicLandingPage
+          onOpenAuth={(mode) => {
+            setAuthDefaultMode(mode);
+            setAuthModalOpen(true);
+          }}
+          onEnterDemo={() => setIsDemoSession(true)}
+          onToggleTheme={toggleTheme}
+          theme={theme}
+        />
+        <AuthModal
+          isOpen={authModalOpen}
+          defaultMode={authDefaultMode}
+          onClose={() => setAuthModalOpen(false)}
+          onEnterDemoMode={() => {
+            setAuthModalOpen(false);
+            setIsDemoSession(true);
+          }}
+        />
+      </>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070D19] text-slate-900 dark:text-white font-sans transition-colors duration-300 relative selection:bg-sky-500 selection:text-white">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-slate-50 dark:bg-[#050B14] text-slate-900 dark:text-[#F5F9FF] font-sans transition-colors duration-300 relative selection:bg-sky-500 selection:text-white">
+      {/* Demo Session Top Banner */}
+      {isDemoSession && (
+        <div className="bg-sky-500/10 border-b border-sky-300/40 dark:border-sky-500/30 px-3 sm:px-4 py-2 sm:py-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-sky-800 dark:text-sky-200 relative z-30">
+          <div className="flex items-center gap-2 font-bold">
+            <PlayCircle className="h-4 w-4 text-sky-600 dark:text-sky-400 shrink-0" />
+            <span className="text-[11px] sm:text-xs">DEMO MODE — CREATOR SHOWCASE (Vangala Sricharan Profile)</span>
+          </div>
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <button
+              onClick={() => {
+                setAuthDefaultMode('signup');
+                setAuthModalOpen(true);
+              }}
+              className="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 active:scale-95 text-white font-bold text-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-400"
+            >
+              Sign Up / Log In
+            </button>
+            <button
+              onClick={() => setIsDemoSession(false)}
+              className="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-[#0B1626] text-slate-800 dark:text-[#F5F9FF] font-bold text-xs hover:bg-slate-300 dark:hover:bg-[#101D30] active:scale-95 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-400"
+            >
+              Exit Demo
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* New User Onboarding Wizard Modal */}
+      {user && needsOnboarding && (
+        <OnboardingWizard
+          userEmail={user.email || ''}
+          userName={user.user_metadata?.full_name || ''}
+          onComplete={handleOnboardingComplete}
+        />
+      )}
+
       {/* Background Ambient Mesh Lighting */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-sky-300/20 dark:bg-blue-600/15 rounded-full blur-[120px] -mr-48 -mt-48" />
@@ -354,7 +444,7 @@ function MainAppContent() {
             onOpenAuth={() => setAuthModalOpen(true)}
           />
 
-          <main id="app-main-content" className="flex-1 px-4 sm:px-6 lg:px-8 pt-6 pb-12">
+          <main id="app-main-content" className="flex-1 px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-12 min-w-0 max-w-full overflow-x-hidden">
             {/* V3 Migration Banner */}
             <MigrationBanner
               localState={activeStudent}
@@ -534,7 +624,12 @@ function MainAppContent() {
       {/* Auth Modal */}
       <AuthModal
         isOpen={authModalOpen}
+        defaultMode={authDefaultMode}
         onClose={() => setAuthModalOpen(false)}
+        onEnterDemoMode={() => {
+          setAuthModalOpen(false);
+          setIsDemoSession(true);
+        }}
       />
 
       {/* Upgrade Pro Modal */}

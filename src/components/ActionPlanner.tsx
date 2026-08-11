@@ -49,7 +49,7 @@ export const ActionPlanner: React.FC<ActionPlannerProps> = ({
   });
 
   return (
-    <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-[#080E1A]/80 backdrop-blur-xl p-5 sm:p-6 shadow-xl transition-all">
+    <div className="rounded-2xl border border-slate-200/80 dark:border-sky-500/20 bg-white/70 dark:bg-[#0B1626]/80 backdrop-blur-xl p-5 sm:p-6 shadow-xl transition-all">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>

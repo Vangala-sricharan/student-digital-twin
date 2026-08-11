@@ -20,7 +20,7 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ profile, overallScore })
 
   // SVG QR Code rendering simulation for Public Twin sharing
   return (
-    <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-[#080E1A]/80 backdrop-blur-xl p-5 sm:p-6 shadow-xl transition-all">
+    <div className="rounded-2xl border border-slate-200/80 dark:border-sky-500/20 bg-white/70 dark:bg-[#0B1626]/80 backdrop-blur-xl p-5 sm:p-6 shadow-xl transition-all">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
