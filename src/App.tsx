@@ -710,6 +710,8 @@ function MainAppContent() {
                 currentState={activeStudent}
                 onImportState={handleImportState}
                 onNavigateToUpgrade={() => handleTabChange('upgrade')}
+                user={user}
+                onSignOut={handleSignOut}
               />
             )}
           </main>

@@ -9,11 +9,16 @@ interface AuthContextType {
   authError: string | null;
   cloudSyncStatus: CloudSyncStatus;
   isCloudConfigured: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string
+  ) => Promise<{ error: any; data?: any; needsEmailConfirmation?: boolean }>;
+  signIn: (email: string, password: string) => Promise<{ error: any; data?: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<{ error?: any }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
+  clearAuthError: () => void;
   migrateV2LocalDataToCloud: (localState: DigitalTwinState) => Promise<{ success: boolean; message: string }>;
   fetchCloudState: () => Promise<DigitalTwinState | null>;
   saveCloudState: (state: DigitalTwinState) => Promise<boolean>;
@@ -77,58 +82,92 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, fullName: string) => {
     setAuthError(null);
+    const cleanedEmail = email.trim().toLowerCase();
+    const cleanedFullName = fullName.trim();
+
     if (!supabase) {
       const err = new Error('Supabase client is not configured');
       setAuthError(err.message);
       return { error: err };
     }
+
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: cleanedEmail,
       password,
       options: {
         data: {
-          full_name: fullName,
+          full_name: cleanedFullName,
         },
+        emailRedirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
       },
     });
+
     if (error) {
       let formattedMsg = error.message;
-      if (formattedMsg.includes('User already registered') || formattedMsg.includes('already registered')) {
-        formattedMsg = 'User already registered. Please log in instead.';
+      const lowerMsg = (error.message || '').toLowerCase();
+      if (
+        lowerMsg.includes('user already registered') ||
+        lowerMsg.includes('already registered') ||
+        lowerMsg.includes('already exists')
+      ) {
+        formattedMsg = 'An account with this email already exists. Please log in instead.';
+      } else if (lowerMsg.includes('rate limit') || lowerMsg.includes('too many requests')) {
+        formattedMsg = 'Too many attempts. Please try again later.';
       }
       setAuthError(formattedMsg);
       return { error: new Error(formattedMsg), data };
     }
-    return { error: null, data };
+
+    // Check if user already exists (Supabase returns user object with identities: [] if already registered)
+    if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      const existingUserErr = new Error('An account with this email already exists. Please log in instead.');
+      setAuthError(existingUserErr.message);
+      return { error: existingUserErr, data };
+    }
+
+    const needsEmailConfirmation = !data?.session && Boolean(data?.user);
+
+    return { error: null, data, needsEmailConfirmation };
   };
 
   const signIn = async (email: string, password: string) => {
     setAuthError(null);
+    const cleanedEmail = email.trim().toLowerCase();
+
     if (!supabase) {
       const err = new Error('Supabase client is not configured');
       setAuthError(err.message);
       return { error: err };
     }
+
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: cleanedEmail,
       password,
     });
+
     if (error) {
       let formattedMsg = error.message;
-      if (formattedMsg.includes('Email not confirmed')) {
-        formattedMsg = 'Please verify your email before signing in.';
+      const lowerMsg = (error.message || '').toLowerCase();
+
+      if (lowerMsg.includes('email not confirmed') || lowerMsg.includes('email_not_confirmed')) {
+        formattedMsg = 'Please verify your email address before signing in.';
       } else if (
-        formattedMsg.includes('Invalid login credentials') ||
-        formattedMsg.includes('invalid_credentials') ||
-        formattedMsg.includes('Invalid credentials')
+        lowerMsg.includes('invalid login credentials') ||
+        lowerMsg.includes('invalid_credentials') ||
+        lowerMsg.includes('invalid credentials')
       ) {
         formattedMsg = 'Incorrect email or password.';
-      } else if (formattedMsg.includes('Failed to fetch') || formattedMsg.includes('NetworkError')) {
+      } else if (lowerMsg.includes('user not found') || lowerMsg.includes('user_not_found')) {
+        formattedMsg = 'No account found with this email address.';
+      } else if (lowerMsg.includes('too many') || lowerMsg.includes('rate limit')) {
+        formattedMsg = 'Too many attempts. Please try again later.';
+      } else if (lowerMsg.includes('failed to fetch') || lowerMsg.includes('networkerror')) {
         formattedMsg = 'Unable to connect. Please try again.';
       }
       setAuthError(formattedMsg);
       return { error: new Error(formattedMsg), data };
     }
+
     return { error: null, data };
   };
 
@@ -167,12 +206,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    let signOutErr: any = null;
     if (supabase) {
-      await supabase.auth.signOut();
+      try {
+        const { error } = await supabase.auth.signOut();
+        if (error) signOutErr = error;
+      } catch (err) {
+        signOutErr = err;
+      }
     }
     setUser(null);
     setSession(null);
     setCloudSyncStatus('local');
+    if (signOutErr) {
+      return { error: signOutErr };
+    }
+    return { error: null };
   };
 
   const resetPassword = async (email: string) => {
@@ -480,6 +529,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const clearAuthError = () => setAuthError(null);
+
   return (
     <AuthContext.Provider
       value={{
@@ -494,6 +545,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithGoogle,
         signOut,
         resetPassword,
+        clearAuthError,
         migrateV2LocalDataToCloud,
         fetchCloudState,
         saveCloudState,

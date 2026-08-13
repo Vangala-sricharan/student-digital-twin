@@ -104,7 +104,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold text-xs active:scale-95 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/50"
                   >
                     <LogOut className="h-4 w-4 shrink-0" />
-                    <span className="hidden sm:inline">Log Out</span>
+                    <span>Log Out</span>
                   </button>
                 )}
               </div>

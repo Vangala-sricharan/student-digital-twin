@@ -15,7 +15,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   defaultMode = 'signin',
   onEnterDemoMode,
 }) => {
-  const { signIn, signUp, signInWithGoogle, resetPassword, authError, isCloudConfigured } = useAuth();
+  const { signIn, signUp, signInWithGoogle, resetPassword, authError, clearAuthError, isCloudConfigured } = useAuth();
   const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>(defaultMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,25 +25,47 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   if (!isOpen) return null;
 
+  const handleClose = () => {
+    clearAuthError();
+    setSuccessMsg('');
+    onClose();
+  };
+
+  const switchMode = (newMode: 'signin' | 'signup' | 'reset') => {
+    clearAuthError();
+    setSuccessMsg('');
+    setMode(newMode);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setSuccessMsg('');
 
+    const cleanedEmail = email.trim().toLowerCase();
+
     try {
       if (mode === 'signin') {
-        const { error } = await signIn(email, password);
+        const { error } = await signIn(cleanedEmail, password);
         if (!error) {
           onClose();
         }
       } else if (mode === 'signup') {
-        const { error } = await signUp(email, password, fullName);
-        if (!error) {
-          setSuccessMsg('Account created successfully! Welcome to Student Digital Twin Cloud.');
-          setTimeout(() => onClose(), 1200);
+        const result = await signUp(cleanedEmail, password, fullName);
+        if (!result.error) {
+          if (result.needsEmailConfirmation) {
+            setSuccessMsg('Account created. Please confirm your email before signing in.');
+            setTimeout(() => {
+              setMode('signin');
+              setSuccessMsg('');
+            }, 4000);
+          } else {
+            setSuccessMsg('Account created successfully! Welcome to Student Digital Twin Cloud.');
+            setTimeout(() => onClose(), 1200);
+          }
         }
       } else if (mode === 'reset') {
-        const { error } = await resetPassword(email);
+        const { error } = await resetPassword(cleanedEmail);
         if (!error) {
           setSuccessMsg('Password reset instructions have been sent to your email.');
         }
@@ -71,7 +93,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl glass-panel p-6 sm:p-8 shadow-2xl transition-all">
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute right-4 top-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
         >
           <X className="h-5 w-5" />
@@ -173,7 +195,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 {mode === 'signin' && (
                   <button
                     type="button"
-                    onClick={() => setMode('reset')}
+                    onClick={() => switchMode('reset')}
                     className="text-[11px] font-semibold text-cyan-600 dark:text-cyan-400 hover:underline"
                   >
                     Forgot password?
@@ -281,7 +303,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <p>
               Don't have a Cloud Digital Twin?{' '}
               <button
-                onClick={() => setMode('signup')}
+                onClick={() => switchMode('signup')}
                 className="font-bold text-cyan-600 dark:text-cyan-400 hover:underline"
               >
                 Sign up free
@@ -291,7 +313,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <p>
               Already have an account?{' '}
               <button
-                onClick={() => setMode('signin')}
+                onClick={() => switchMode('signin')}
                 className="font-bold text-cyan-600 dark:text-cyan-400 hover:underline"
               >
                 Sign in
@@ -299,7 +321,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </p>
           ) : (
             <button
-              onClick={() => setMode('signin')}
+              onClick={() => switchMode('signin')}
               className="font-bold text-cyan-600 dark:text-cyan-400 hover:underline"
             >
               Back to Sign In

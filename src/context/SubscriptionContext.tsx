@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 export type PlanType = 'free' | 'pro' | 'pro_annual';
 
@@ -47,19 +48,47 @@ const AI_DAILY_LIMIT_PRO = 100;
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [plan, setPlanState] = useState<PlanType>(() => {
-    try {
-      const saved = localStorage.getItem(PLAN_STORAGE_KEY);
-      if (saved === 'free' || saved === 'pro' || saved === 'pro_annual') {
-        return saved;
-      }
-    } catch (e) {
-      console.error('Failed to read plan', e);
-    }
-    return 'free';
-  });
+  const { user } = useAuth();
 
+  const [plan, setPlanState] = useState<PlanType>('free');
   const [demoMode, setDemoModeState] = useState<boolean>(false);
+
+  // Sync user-isolated plan & demo mode whenever authenticated user changes
+  useEffect(() => {
+    if (user) {
+      // Authenticated user MUST NOT inherit creator/demo mode
+      setDemoModeState(false);
+      try {
+        localStorage.setItem(DEMO_MODE_KEY, 'false');
+      } catch (e) {}
+
+      // Look up user-specific saved plan
+      const userPlanKey = `${PLAN_STORAGE_KEY}_${user.id}`;
+      const savedUserPlan = localStorage.getItem(userPlanKey);
+      if (savedUserPlan === 'free' || savedUserPlan === 'pro' || savedUserPlan === 'pro_annual') {
+        setPlanState(savedUserPlan);
+      } else {
+        // Absolute rule: ALL NEW authenticated users MUST START ON FREE PLAN
+        setPlanState('free');
+        try {
+          localStorage.setItem(userPlanKey, 'free');
+          localStorage.setItem(PLAN_STORAGE_KEY, 'free');
+        } catch (e) {}
+      }
+    } else {
+      // Unauthenticated state / Demo mode fallback
+      try {
+        const savedGlobal = localStorage.getItem(PLAN_STORAGE_KEY);
+        if (savedGlobal === 'free' || savedGlobal === 'pro' || savedGlobal === 'pro_annual') {
+          setPlanState(savedGlobal);
+        } else {
+          setPlanState('free');
+        }
+      } catch (e) {
+        setPlanState('free');
+      }
+    }
+  }, [user]);
 
   const setDemoMode = (active: boolean) => {
     setDemoModeState(active);
@@ -98,6 +127,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setPlanState(newPlan);
     try {
       localStorage.setItem(PLAN_STORAGE_KEY, newPlan);
+      if (user?.id) {
+        localStorage.setItem(`${PLAN_STORAGE_KEY}_${user.id}`, newPlan);
+      }
     } catch (e) {
       console.error('Failed to save plan', e);
     }

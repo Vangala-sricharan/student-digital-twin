@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, RotateCcw, Trash2, Download, Upload, Sun, Moon, CheckCircle2, AlertTriangle, Globe, Zap, Sparkles } from 'lucide-react';
+import { Settings, RotateCcw, Trash2, Download, Upload, Sun, Moon, CheckCircle2, AlertTriangle, Globe, Zap, Sparkles, User, LogOut, ShieldCheck } from 'lucide-react';
 import { GlassCard } from '../components/GlassCard';
 import { Modal } from '../components/Modal';
 import { DigitalTwinState } from '../types';
@@ -16,6 +16,8 @@ interface SettingsPageProps {
   onImportState: (newState: DigitalTwinState) => void;
   id?: string;
   onNavigateToUpgrade?: () => void;
+  user?: any | null;
+  onSignOut?: () => void;
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
@@ -25,6 +27,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   onImportState,
   id,
   onNavigateToUpgrade,
+  user,
+  onSignOut,
 }) => {
   const { t, language, setLanguage, languages } = useLanguage();
   const { theme, toggleTheme } = useTheme();
@@ -89,6 +93,38 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           </div>
         )}
       </div>
+
+      {/* Account & Session Card if Authenticated */}
+      {user && onSignOut && (
+        <GlassCard className="p-6 space-y-4 border-cyan-500/30">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <User className="h-4 w-4 text-cyan-500" />
+            <span>Account & Authentication Session</span>
+          </h2>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-100/80 dark:bg-white/5 border border-slate-200/80 dark:border-white/10">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-900 dark:text-white">{user.email}</span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
+                  Active Session
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Signed in via {user.app_metadata?.provider === 'google' ? 'Google OAuth' : 'Email & Password'}
+              </p>
+            </div>
+
+            <button
+              onClick={onSignOut}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold text-xs transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span>Log Out</span>
+            </button>
+          </div>
+        </GlassCard>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Language Selection */}

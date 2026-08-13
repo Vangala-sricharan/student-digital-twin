@@ -150,7 +150,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold text-xs transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/50"
             >
               <LogOut className="h-3.5 w-3.5 shrink-0" />
-              <span className="hidden sm:inline">Log Out</span>
+              <span>Log Out</span>
             </button>
           </div>
         )}
