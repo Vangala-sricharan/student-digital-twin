@@ -512,10 +512,11 @@ export const StudentProfilesPage: React.FC<StudentProfilesPageProps> = ({
                   {/* Card PDF Download */}
                   <button
                     onClick={() => handleDownloadPDF(student)}
-                    title="Download PDF Report"
-                    className="p-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 transition-all cursor-pointer"
+                    title={`Download PDF Report for ${student.profile.name}`}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 font-bold text-xs transition-all cursor-pointer"
                   >
-                    <FileText className="h-4 w-4" />
+                    <FileText className="h-3.5 w-3.5" />
+                    <span>PDF</span>
                   </button>
 
                   {/* Card JSON Backup */}

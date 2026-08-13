@@ -624,10 +624,10 @@ function MainAppContent() {
             )}
 
             {activeTab === 'profile' && (
-
               <ProfilePage
                 profile={activeStudent.profile}
                 onUpdateProfile={handleUpdateProfile}
+                activeStudent={activeStudent}
               />
             )}
 

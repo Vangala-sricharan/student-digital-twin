@@ -1,7 +1,8 @@
-import React from 'react';
-import { Sparkles, ShieldCheck, Github, Linkedin, Mail, ExternalLink, ArrowLeft, Award, FolderGit2, CheckCircle2 } from 'lucide-react';
-import { DigitalTwinState } from '../types';
+import React, { useState } from 'react';
+import { Sparkles, ShieldCheck, Github, Linkedin, Mail, ExternalLink, ArrowLeft, Award, FolderGit2, CheckCircle2, FileText, RefreshCw } from 'lucide-react';
+import { DigitalTwinState, StudentRecord } from '../types';
 import { QRCodeCard } from '../components/QRCodeCard';
+import { generateStudentPDF } from '../utils/pdfGenerator';
 
 interface PublicDigitalTwinPageProps {
   state: DigitalTwinState;
@@ -15,11 +16,27 @@ export const PublicDigitalTwinPage: React.FC<PublicDigitalTwinPageProps> = ({
   onBackToApp,
 }) => {
   const { profile, skills, projects, achievements } = state;
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      const studentRecord: StudentRecord = {
+        id: `rec-${Date.now()}`,
+        ...state,
+      };
+      await generateStudentPDF(studentRecord);
+    } catch (err) {
+      console.error('Failed to generate PDF:', err);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#070D19] text-white p-4 sm:p-6 lg:p-12 font-sans selection:bg-cyan-500 selection:text-slate-950">
       {/* Top Navbar */}
-      <div className="max-w-5xl mx-auto flex items-center justify-between mb-8 pb-4 border-b border-white/10">
+      <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-4 mb-8 pb-4 border-b border-white/10">
         <button
           onClick={onBackToApp}
           className="flex items-center gap-2 text-xs font-bold text-slate-300 hover:text-cyan-400 bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl border border-white/10 transition-all cursor-pointer"
@@ -28,11 +45,26 @@ export const PublicDigitalTwinPage: React.FC<PublicDigitalTwinPageProps> = ({
           <span>Back to App Dashboard</span>
         </button>
 
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-cyan-400" />
-          <span className="text-xs font-black tracking-wider uppercase text-cyan-400">
-            Student Digital Twin V3 Verified
-          </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleDownloadPDF}
+            disabled={isGeneratingPDF}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold transition-all shadow-md active:scale-95 disabled:opacity-60 cursor-pointer"
+          >
+            {isGeneratingPDF ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4" />
+            )}
+            <span>{isGeneratingPDF ? 'Generating PDF...' : 'Download PDF Report'}</span>
+          </button>
+
+          <div className="hidden sm:flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-cyan-400" />
+            <span className="text-xs font-black tracking-wider uppercase text-cyan-400">
+              Student Digital Twin V3 Verified
+            </span>
+          </div>
         </div>
       </div>
 

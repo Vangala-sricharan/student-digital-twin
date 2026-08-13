@@ -92,19 +92,19 @@ export async function generateStudentPDF(student: StudentRecord): Promise<void> 
   );
 
   // 3. Student Personal Details Card
-  checkPageBreak(50);
+  checkPageBreak(58);
   doc.setFillColor(248, 250, 252);
   doc.setDrawColor(203, 213, 225);
-  doc.roundedRect(margin, y, contentWidth, 48, 3, 3, 'FD');
+  doc.roundedRect(margin, y, contentWidth, 52, 3, 3, 'FD');
 
   // Name & Title
   doc.setTextColor(15, 23, 42);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
+  doc.setFontSize(15);
   doc.text(student.profile.name || 'Student Name Not Provided', margin + 6, y + 9);
 
   doc.setTextColor(2, 132, 199);
-  doc.setFontSize(10);
+  doc.setFontSize(9.5);
   doc.text(`Target Role: ${student.profile.careerGoal || 'Not specified'}`, margin + 6, y + 15);
 
   // Score Badge on Right
@@ -125,22 +125,24 @@ export async function generateStudentPDF(student: StudentRecord): Promise<void> 
   const col1X = margin + 6;
   const col2X = margin + 90;
 
-  doc.text(`University: ${student.profile.university || 'Not provided'}`, col1X, y + 24);
-  doc.text(`Degree: ${student.profile.degree || 'Not provided'} (${student.profile.branch || 'N/A'})`, col1X, y + 30);
-  doc.text(`Year/Sem: ${student.profile.year || 'N/A'} • ${student.profile.semester || 'N/A'}`, col1X, y + 36);
+  doc.text(`University: ${student.profile.university || 'Not provided'}`, col1X, y + 23);
+  doc.text(`Degree: ${student.profile.degree || 'Not provided'} (${student.profile.branch || 'N/A'})`, col1X, y + 29);
+  doc.text(`Year/Sem: ${student.profile.year || 'N/A'} • ${student.profile.semester || 'N/A'}`, col1X, y + 35);
+  doc.text(`Location: ${student.profile.location || 'Not provided'}`, col1X, y + 41);
 
-  doc.text(`CGPA / Score: ${student.profile.cgpa || 'Not added'}`, col2X, y + 24);
-  doc.text(`Email: ${student.profile.email || 'Not provided'}`, col2X, y + 30);
-  doc.text(`GitHub: ${student.profile.gitHub || 'Not linked'}`, col2X, y + 36);
+  doc.text(`CGPA / Score: ${student.profile.cgpa || 'Not added'}`, col2X, y + 23);
+  doc.text(`Email: ${student.profile.email || 'Not provided'}`, col2X, y + 29);
+  doc.text(`GitHub: ${student.profile.gitHub || 'Not linked'}`, col2X, y + 35);
+  doc.text(`LinkedIn: ${student.profile.linkedIn || 'Not linked'}`, col2X, y + 41);
 
   if (student.profile.bio) {
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(8);
     const splitBio = doc.splitTextToSize(`Bio: ${student.profile.bio}`, contentWidth - 12);
-    doc.text(splitBio[0] || '', col1X, y + 43);
+    doc.text(splitBio[0] || '', col1X, y + 47);
   }
 
-  y += 54;
+  y += 58;
 
   // Helper Section Header Renderer
   const renderSectionHeader = (title: string) => {

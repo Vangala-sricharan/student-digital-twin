@@ -1,21 +1,36 @@
 import React, { useState } from 'react';
-import { User, Save, Linkedin, Github, Globe, CheckCircle, GraduationCap, MapPin, Mail, Sparkles } from 'lucide-react';
+import { User, Save, Linkedin, Github, Globe, CheckCircle, GraduationCap, MapPin, Mail, Sparkles, FileText, RefreshCw } from 'lucide-react';
 import { GlassCard } from '../components/GlassCard';
-import { StudentProfile } from '../types';
+import { StudentProfile, StudentRecord } from '../types';
+import { generateStudentPDF } from '../utils/pdfGenerator';
 
 interface ProfilePageProps {
   profile: StudentProfile;
   onUpdateProfile: (updated: StudentProfile) => void;
   id?: string;
+  activeStudent?: StudentRecord;
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ profile, onUpdateProfile, id }) => {
+export const ProfilePage: React.FC<ProfilePageProps> = ({ profile, onUpdateProfile, id, activeStudent }) => {
   const [formData, setFormData] = useState<StudentProfile>(profile);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!activeStudent) return;
+    setIsGeneratingPDF(true);
+    try {
+      await generateStudentPDF(activeStudent);
+    } catch (err) {
+      console.error('Failed to generate PDF:', err);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -39,12 +54,30 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profile, onUpdateProfi
           </p>
         </div>
 
-        {savedSuccess && (
-          <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-600 border border-emerald-500/20">
-            <CheckCircle className="h-4 w-4" />
-            <span>Profile updated successfully!</span>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {activeStudent && (
+            <button
+              type="button"
+              onClick={handleDownloadPDF}
+              disabled={isGeneratingPDF}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-bold hover:opacity-90 transition-all shadow-md shadow-cyan-500/20 active:scale-95 disabled:opacity-60 cursor-pointer"
+            >
+              {isGeneratingPDF ? (
+                <RefreshCw className="h-4 w-4 animate-spin text-white" />
+              ) : (
+                <FileText className="h-4 w-4 text-white" />
+              )}
+              <span>{isGeneratingPDF ? 'Generating PDF...' : 'Download PDF Report'}</span>
+            </button>
+          )}
+
+          {savedSuccess && (
+            <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 px-4 py-2 text-xs font-bold text-emerald-600 border border-emerald-500/20">
+              <CheckCircle className="h-4 w-4" />
+              <span>Profile updated successfully!</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
