@@ -8,18 +8,21 @@ import {
   Download,
   Upload,
   Search,
-  Sparkles,
   AlertTriangle,
   Building2,
   GraduationCap,
   Briefcase,
   X,
   FileJson,
+  FileText,
+  RefreshCw,
+  ChevronDown,
   Check,
 } from 'lucide-react';
 import { GlassCard } from '../components/GlassCard';
 import { StudentRecord, StudentProfile } from '../types';
 import { CAREER_GOAL_PRESETS, INITIAL_RESUME_CHECKLIST } from '../data/initialData';
+import { generateStudentPDF } from '../utils/pdfGenerator';
 
 interface StudentProfilesPageProps {
   students: StudentRecord[];
@@ -42,6 +45,13 @@ export const StudentProfilesPage: React.FC<StudentProfilesPageProps> = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentRecord | null>(null);
   const [deletingStudentId, setDeletingStudentId] = useState<string | null>(null);
+
+  // PDF Generation State
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [pdfNotice, setPdfNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Data Management Dropdown State
+  const [isDataMenuOpen, setIsDataMenuOpen] = useState(false);
 
   // Import State
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -66,6 +76,8 @@ export const StudentProfilesPage: React.FC<StudentProfilesPageProps> = ({
     location: '',
   });
 
+  const activeStudent = students.find((s) => s.id === activeStudentId) || students[0];
+
   const filteredStudents = students.filter((s) => {
     const q = searchQuery.toLowerCase();
     return (
@@ -75,6 +87,31 @@ export const StudentProfilesPage: React.FC<StudentProfilesPageProps> = ({
       s.profile.branch.toLowerCase().includes(q)
     );
   });
+
+  const handleDownloadPDF = async (targetStudent?: StudentRecord) => {
+    const studentToExport = targetStudent || activeStudent;
+    if (!studentToExport) return;
+
+    setIsGeneratingPDF(true);
+    setPdfNotice(null);
+
+    try {
+      await generateStudentPDF(studentToExport);
+      setPdfNotice({
+        type: 'success',
+        message: `PDF report for ${studentToExport.profile.name} downloaded successfully!`,
+      });
+      setTimeout(() => setPdfNotice(null), 4000);
+    } catch (err) {
+      console.error('Failed to generate PDF:', err);
+      setPdfNotice({
+        type: 'error',
+        message: 'Unable to generate PDF. Please try again.',
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   const handleOpenAddModal = () => {
     setFormData({
@@ -169,7 +206,7 @@ export const StudentProfilesPage: React.FC<StudentProfilesPageProps> = ({
     setIsAddModalOpen(false);
   };
 
-  const handleExport = (student: StudentRecord) => {
+  const handleExportJSON = (student: StudentRecord) => {
     const filename = `student-digital-twin-${student.profile.name
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '-')}.json`;
@@ -229,6 +266,15 @@ export const StudentProfilesPage: React.FC<StudentProfilesPageProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Hidden File Input for JSON Restore */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".json"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
       {/* Header */}
       <GlassCard className="p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -244,46 +290,113 @@ export const StudentProfilesPage: React.FC<StudentProfilesPageProps> = ({
                 </span>
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-                Manage, switch, export, and import independent Student Digital Twin profiles.
+                Manage profiles, download PDF reports, or maintain data backups.
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap">
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept=".json"
-              onChange={handleFileChange}
-              className="hidden"
-            />
+            {/* Primary Action 1: Download PDF */}
             <button
-              onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-slate-200 text-xs font-bold hover:bg-slate-200 dark:hover:bg-white/20 transition-all border border-slate-200/80 dark:border-white/10"
+              onClick={() => handleDownloadPDF(activeStudent)}
+              disabled={isGeneratingPDF}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-bold hover:opacity-90 transition-all shadow-md shadow-cyan-500/20 active:scale-95 disabled:opacity-60 cursor-pointer"
             >
-              <Upload className="h-4 w-4 text-cyan-500" />
-              <span>Import JSON</span>
+              {isGeneratingPDF ? (
+                <RefreshCw className="h-4 w-4 animate-spin text-white" />
+              ) : (
+                <FileText className="h-4 w-4 text-white" />
+              )}
+              <span>{isGeneratingPDF ? 'Generating PDF...' : 'Download PDF'}</span>
             </button>
 
+            {/* Primary Action 2: + Add Student */}
             <button
               onClick={handleOpenAddModal}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-bold hover:opacity-90 transition-all shadow-md shadow-cyan-500/20"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition-all shadow-md active:scale-95 cursor-pointer"
             >
               <UserPlus className="h-4 w-4" />
               <span>+ Add Student</span>
             </button>
+
+            {/* Secondary Action: Backup / Restore Data Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsDataMenuOpen(!isDataMenuOpen)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-200 dark:hover:bg-white/20 transition-all border border-slate-200/80 dark:border-white/10 cursor-pointer"
+                title="Backup & Restore Data (JSON)"
+              >
+                <FileJson className="h-4 w-4 text-slate-500" />
+                <span className="hidden sm:inline">Data Management</span>
+                <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+              </button>
+
+              {isDataMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-xl z-30 p-2 space-y-1">
+                  <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Backup / Restore Data
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsDataMenuOpen(false);
+                      if (activeStudent) handleExportJSON(activeStudent);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 font-medium text-left cursor-pointer"
+                  >
+                    <Download className="h-3.5 w-3.5 text-cyan-500" />
+                    <span>Export JSON Backup</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsDataMenuOpen(false);
+                      fileInputRef.current?.click();
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 font-medium text-left cursor-pointer"
+                  >
+                    <Upload className="h-3.5 w-3.5 text-cyan-500" />
+                    <span>Import JSON Restore</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </GlassCard>
+
+      {/* PDF Generation Notification Toast */}
+      {pdfNotice && (
+        <div
+          className={`p-4 rounded-2xl text-xs flex items-center justify-between shadow-md transition-all ${
+            pdfNotice.type === 'success'
+              ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+              : 'bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {pdfNotice.type === 'success' ? (
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+            ) : (
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+            )}
+            <span className="font-semibold">{pdfNotice.message}</span>
+          </div>
+          <button
+            onClick={() => setPdfNotice(null)}
+            className="text-xs font-bold hover:underline cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Import Error Message */}
       {importError && (
         <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" />
+            <AlertTriangle className="h-4 w-4 shrink-0" />
             <span>{importError}</span>
           </div>
-          <button onClick={() => setImportError(null)} className="text-xs font-bold hover:underline">
+          <button onClick={() => setImportError(null)} className="text-xs font-bold hover:underline cursor-pointer">
             Dismiss
           </button>
         </div>
@@ -385,7 +498,7 @@ export const StudentProfilesPage: React.FC<StudentProfilesPageProps> = ({
                 {!isActive ? (
                   <button
                     onClick={() => onSelectStudent(student.id)}
-                    className="flex-1 py-2 px-3 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 font-bold text-xs hover:bg-cyan-500/20 transition-all"
+                    className="flex-1 py-2 px-3 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 font-bold text-xs hover:bg-cyan-500/20 transition-all cursor-pointer"
                   >
                     Activate Profile
                   </button>
@@ -396,25 +509,39 @@ export const StudentProfilesPage: React.FC<StudentProfilesPageProps> = ({
                 )}
 
                 <div className="flex items-center gap-1">
+                  {/* Card PDF Download */}
                   <button
-                    onClick={() => handleExport(student)}
-                    title="Export Student JSON"
-                    className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:text-cyan-500 border border-slate-200/60 dark:border-white/10"
+                    onClick={() => handleDownloadPDF(student)}
+                    title="Download PDF Report"
+                    className="p-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 transition-all cursor-pointer"
                   >
-                    <Download className="h-4 w-4" />
+                    <FileText className="h-4 w-4" />
                   </button>
+
+                  {/* Card JSON Backup */}
+                  <button
+                    onClick={() => handleExportJSON(student)}
+                    title="Export JSON Backup"
+                    className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 hover:text-slate-900 dark:hover:text-white border border-slate-200/60 dark:border-white/10 transition-all cursor-pointer"
+                  >
+                    <FileJson className="h-4 w-4" />
+                  </button>
+
+                  {/* Edit */}
                   <button
                     onClick={() => handleOpenEditModal(student)}
                     title="Edit Student Info"
-                    className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:text-cyan-500 border border-slate-200/60 dark:border-white/10"
+                    className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:text-cyan-500 border border-slate-200/60 dark:border-white/10 transition-all cursor-pointer"
                   >
                     <Edit className="h-4 w-4" />
                   </button>
+
+                  {/* Delete */}
                   <button
                     onClick={() => setDeletingStudentId(student.id)}
                     disabled={students.length <= 1}
                     title={students.length <= 1 ? 'Cannot delete only student' : 'Delete Student'}
-                    className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-rose-500 hover:bg-rose-500/10 border border-slate-200/60 dark:border-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-rose-500 hover:bg-rose-500/10 border border-slate-200/60 dark:border-white/10 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -607,10 +734,10 @@ export const StudentProfilesPage: React.FC<StudentProfilesPageProps> = ({
               </div>
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Confirm Digital Twin Import
+                  Confirm Digital Twin Restore
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Import as a new independent student profile.
+                  Restore backup data as an independent student profile.
                 </p>
               </div>
             </div>
@@ -644,15 +771,15 @@ export const StudentProfilesPage: React.FC<StudentProfilesPageProps> = ({
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setImportPreview(null)}
-                className="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-white/10 text-xs"
+                className="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-white/10 text-xs cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmImport}
-                className="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-xs shadow-md shadow-cyan-500/20"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-xs shadow-md shadow-cyan-500/20 cursor-pointer"
               >
-                Import & Activate
+                Restore & Activate
               </button>
             </div>
           </GlassCard>
@@ -677,7 +804,7 @@ export const StudentProfilesPage: React.FC<StudentProfilesPageProps> = ({
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => setDeletingStudentId(null)}
-                className="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 font-bold text-xs"
+                className="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 font-bold text-xs cursor-pointer"
               >
                 Cancel
               </button>
@@ -686,7 +813,7 @@ export const StudentProfilesPage: React.FC<StudentProfilesPageProps> = ({
                   onDeleteStudent(deletingStudentId);
                   setDeletingStudentId(null);
                 }}
-                className="px-4 py-2 rounded-xl bg-rose-500 text-white font-bold text-xs hover:bg-rose-600 shadow-md shadow-rose-500/20"
+                className="px-4 py-2 rounded-xl bg-rose-500 text-white font-bold text-xs hover:bg-rose-600 shadow-md shadow-rose-500/20 cursor-pointer"
               >
                 Delete Profile
               </button>

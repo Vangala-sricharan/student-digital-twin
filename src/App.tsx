@@ -81,10 +81,17 @@ function MainAppContent() {
   const { user, fetchCloudState, saveCloudState, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
-  // Sync demoMode in SubscriptionContext whenever isDemoSession changes
+  // Sync demoMode in SubscriptionContext whenever isDemoSession or user changes
   useEffect(() => {
-    setDemoMode(isDemoSession);
-  }, [isDemoSession, setDemoMode]);
+    if (user) {
+      if (isDemoSession) {
+        setIsDemoSession(false);
+      }
+      setDemoMode(false);
+    } else {
+      setDemoMode(isDemoSession);
+    }
+  }, [user, isDemoSession, setDemoMode]);
 
   // Helper to create a clean blank StudentRecord for new authenticated users
   const createBlankUserRecord = (email: string, fullName?: string): StudentRecord => {

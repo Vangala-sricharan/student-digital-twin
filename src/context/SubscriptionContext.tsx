@@ -65,7 +65,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Look up user-specific saved plan
       const userPlanKey = `${PLAN_STORAGE_KEY}_${user.id}`;
       const savedUserPlan = localStorage.getItem(userPlanKey);
-      if (savedUserPlan === 'free' || savedUserPlan === 'pro' || savedUserPlan === 'pro_annual') {
+      if (savedUserPlan === 'pro' || savedUserPlan === 'pro_annual') {
         setPlanState(savedUserPlan);
       } else {
         // Absolute rule: ALL NEW authenticated users MUST START ON FREE PLAN
@@ -76,17 +76,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         } catch (e) {}
       }
     } else {
-      // Unauthenticated state / Demo mode fallback
-      try {
-        const savedGlobal = localStorage.getItem(PLAN_STORAGE_KEY);
-        if (savedGlobal === 'free' || savedGlobal === 'pro' || savedGlobal === 'pro_annual') {
-          setPlanState(savedGlobal);
-        } else {
-          setPlanState('free');
-        }
-      } catch (e) {
-        setPlanState('free');
-      }
+      // Unauthenticated state default to free plan
+      setDemoModeState(false);
+      setPlanState('free');
     }
   }, [user]);
 

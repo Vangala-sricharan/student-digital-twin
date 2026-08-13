@@ -84,7 +84,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 <Zap className="h-3 w-3" />
-                <span>{demoMode ? 'DEMO PRO (UNLOCKED)' : plan === 'pro' ? 'PRO PLAN' : 'FREE PLAN'}</span>
+                <span>{demoMode ? 'DEMO PRO (UNLOCKED)' : plan === 'pro' ? 'PRO PLAN' : plan === 'pro_annual' ? 'PRO ANNUAL' : 'FREE PLAN'}</span>
               </span>
             </div>
 
