@@ -55,40 +55,74 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Sync user-isolated plan & demo mode whenever authenticated user changes
   useEffect(() => {
-    if (user) {
+    if (user && user.id) {
       // Authenticated user MUST NOT inherit creator/demo mode
       setDemoModeState(false);
       try {
         localStorage.setItem(DEMO_MODE_KEY, 'false');
       } catch (e) {}
 
-      // Look up user-specific saved plan
-      const userPlanKey = `${PLAN_STORAGE_KEY}_${user.id}`;
+      // Look up user-specific saved plan ONLY
+      const userPlanKey = `${PLAN_STORAGE_KEY}_user_${user.id}`;
       const savedUserPlan = localStorage.getItem(userPlanKey);
+
       if (savedUserPlan === 'pro' || savedUserPlan === 'pro_annual') {
         setPlanState(savedUserPlan);
       } else {
-        // Absolute rule: ALL NEW authenticated users MUST START ON FREE PLAN
+        // ABSOLUTE RULE: All newly authenticated users MUST start on FREE plan (₹0 forever)
         setPlanState('free');
         try {
           localStorage.setItem(userPlanKey, 'free');
-          localStorage.setItem(PLAN_STORAGE_KEY, 'free');
         } catch (e) {}
       }
     } else {
-      // Unauthenticated state default to free plan
+      // Unauthenticated / Guest state defaults to FREE plan
       setDemoModeState(false);
-      setPlanState('free');
+      const guestPlan = localStorage.getItem(`${PLAN_STORAGE_KEY}_guest`);
+      if (guestPlan === 'pro' || guestPlan === 'pro_annual') {
+        setPlanState(guestPlan);
+      } else {
+        setPlanState('free');
+      }
     }
-  }, [user]);
+  }, [user?.id]);
+
+  const setPlan = (newPlan: PlanType) => {
+    setPlanState(newPlan);
+    try {
+      if (user?.id) {
+        localStorage.setItem(`${PLAN_STORAGE_KEY}_user_${user.id}`, newPlan);
+      } else {
+        localStorage.setItem(`${PLAN_STORAGE_KEY}_guest`, newPlan);
+      }
+    } catch (e) {
+      console.error('Failed to save plan', e);
+    }
+  };
 
   const setDemoMode = (active: boolean) => {
+    if (user) {
+      setDemoModeState(false);
+      try {
+        localStorage.setItem(DEMO_MODE_KEY, 'false');
+      } catch (e) {}
+      return;
+    }
     setDemoModeState(active);
     try {
       localStorage.setItem(DEMO_MODE_KEY, String(active));
     } catch (e) {
       console.error('Failed to save demo mode', e);
     }
+  };
+
+  const toggleDemoMode = () => {
+    if (user) {
+      setDemoModeState(false);
+      return;
+    }
+    const next = !demoMode;
+    setDemoMode(next);
   };
 
   const [aiUsageCount, setAiUsageCount] = useState<number>(() => {
@@ -101,9 +135,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
           return parsed.count || 0;
         }
       }
-    } catch (e) {
-      // fallback
-    }
+    } catch (e) {}
     return 0;
   });
 
@@ -115,42 +147,19 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setUpgradeModalOpen(true);
   };
 
-  const setPlan = (newPlan: PlanType) => {
-    setPlanState(newPlan);
-    try {
-      localStorage.setItem(PLAN_STORAGE_KEY, newPlan);
-      if (user?.id) {
-        localStorage.setItem(`${PLAN_STORAGE_KEY}_${user.id}`, newPlan);
-      }
-    } catch (e) {
-      console.error('Failed to save plan', e);
-    }
-  };
-
-  const toggleDemoMode = () => {
-    const next = !demoMode;
-    setDemoModeState(next);
-    try {
-      localStorage.setItem(DEMO_MODE_KEY, String(next));
-    } catch (e) {
-      console.error('Failed to save demo mode', e);
-    }
-  };
-
   const incrementAiUsage = () => {
     setAiUsageCount((prev) => {
       const next = prev + 1;
       try {
         const today = new Date().toISOString().split('T')[0];
         localStorage.setItem(AI_USAGE_KEY, JSON.stringify({ date: today, count: next }));
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
       return next;
     });
   };
 
-  const isPro = plan === 'pro' || plan === 'pro_annual' || demoMode;
+  // Authenticated user is ONLY Pro if their user-scoped plan is 'pro' or 'pro_annual'
+  const isPro = user ? (plan === 'pro' || plan === 'pro_annual') : (plan === 'pro' || plan === 'pro_annual' || demoMode);
 
   const aiLimit = isPro ? AI_DAILY_LIMIT_PRO : AI_DAILY_LIMIT_FREE;
   const remainingAiUsage = Math.max(0, aiLimit - aiUsageCount);
@@ -183,7 +192,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       value={{
         plan,
         setPlan,
-        demoMode,
+        demoMode: user ? false : demoMode,
         setDemoMode,
         toggleDemoMode,
         canAccess,

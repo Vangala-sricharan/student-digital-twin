@@ -3,12 +3,14 @@ import { Sparkles, Check, Zap, RefreshCw, QrCode, Copy, AlertTriangle, CheckCirc
 import { QRCodeSVG } from 'qrcode.react';
 import { GlassCard } from '../components/GlassCard';
 import { useSubscription, PlanType } from '../context/SubscriptionContext';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { PLAN_CONFIGS, PlanConfig, UPI_PAYEE_ID, generateUPIUri, validateUPIUri } from '../data/plans';
 import { PaymentModal } from '../components/PaymentModal';
 
 export const UpgradePage: React.FC = () => {
   const { plan, setPlan, demoMode, toggleDemoMode } = useSubscription();
+  const { user } = useAuth();
   const { t } = useLanguage();
 
   // Payment Modal state
@@ -83,25 +85,36 @@ export const UpgradePage: React.FC = () => {
             Unlock real-time Gemini AI career advisory, deep resume & syllabus auditing, internship readiness analytics, and mathematical career simulation.
           </p>
 
-          {/* Developer Demo Mode Banner */}
+          {/* Subscription Status or Demo Banner */}
           <div className="pt-2">
-            <button
-              onClick={toggleDemoMode}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-2 mx-auto ${
-                demoMode
-                  ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/30 ring-1 ring-cyan-500/30'
-                  : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-white/10'
-              }`}
-            >
-              <Zap className="h-3.5 w-3.5 text-cyan-500" />
-              <span>
-                Demo Mode State: <strong>{demoMode ? 'DEMO PRO (All Features Unlocked)' : 'FREE PLAN'}</strong>
-              </span>
-            </button>
-            {demoMode && (
-              <p className="text-[11px] text-cyan-600 dark:text-cyan-400 font-semibold mt-1.5">
-                All premium features are available for demonstration.
-              </p>
+            {user ? (
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-200">
+                <Zap className="h-3.5 w-3.5 text-cyan-500" />
+                <span>
+                  Active Plan: <strong>{plan === 'pro' ? 'PRO PLAN (₹499/mo)' : plan === 'pro_annual' ? 'PRO ANNUAL (₹3,999/yr)' : 'FREE PLAN (₹0)'}</strong>
+                </span>
+              </div>
+            ) : (
+              <div>
+                <button
+                  onClick={toggleDemoMode}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-2 mx-auto ${
+                    demoMode
+                      ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/30 ring-1 ring-cyan-500/30'
+                      : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-white/10'
+                  }`}
+                >
+                  <Zap className="h-3.5 w-3.5 text-cyan-500" />
+                  <span>
+                    Creator Showcase: <strong>{demoMode ? 'DEMO PRO (Unlocked)' : 'OFF'}</strong>
+                  </span>
+                </button>
+                {demoMode && (
+                  <p className="text-[11px] text-cyan-600 dark:text-cyan-400 font-semibold mt-1.5">
+                    Creator showcase mode active for guest demonstration.
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </div>

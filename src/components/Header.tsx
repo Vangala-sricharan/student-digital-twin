@@ -140,17 +140,17 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Authenticated User Indicator & Log Out Button */}
         {user && onSignOut && (
           <div className="flex items-center gap-1.5">
-            <span className="hidden xl:inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-[#B7C4D6] bg-slate-100 dark:bg-[#0B1626] px-2.5 py-1 rounded-xl border border-slate-200 dark:border-sky-500/20">
+            <span className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-[#B7C4D6] bg-slate-100 dark:bg-[#0B1626] px-2.5 py-1 rounded-xl border border-slate-200 dark:border-sky-500/20">
               <User className="h-3.5 w-3.5 text-cyan-500 shrink-0" />
-              <span className="max-w-[100px] truncate">{user.user_metadata?.full_name || user.email?.split('@')[0]}</span>
+              <span className="max-w-[120px] truncate">{user.user_metadata?.full_name || user.email?.split('@')[0]}</span>
             </span>
             <button
               onClick={onSignOut}
               title={`Log Out (${user.email})`}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold text-xs transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold text-xs transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/50"
             >
               <LogOut className="h-3.5 w-3.5 shrink-0" />
-              <span>Log Out</span>
+              <span className="hidden xs:inline">Log Out</span>
             </button>
           </div>
         )}

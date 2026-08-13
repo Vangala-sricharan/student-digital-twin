@@ -72,22 +72,23 @@ export async function generateStudentPDF(student: StudentRecord): Promise<void> 
   drawHeaderBanner(true);
 
   // 2. Active Goal Resolution for Scoring
+  const careerGoalsList = Array.isArray(student.careerGoals) ? student.careerGoals : [];
   const activeGoal: CareerGoal =
-    student.careerGoals.find((g) => g.id === student.activeCareerGoalId) ||
-    student.careerGoals[0] || {
+    careerGoalsList.find((g) => g.id === student.activeCareerGoalId) ||
+    careerGoalsList[0] || {
       id: 'default',
-      title: student.profile.careerGoal || 'Software Engineer',
+      title: student.profile?.careerGoal || 'Software Engineer',
       description: 'Career goal target',
       targetSkills: {},
     };
 
   const readiness = calculateCareerReadiness(
     student.profile,
-    student.skills,
-    student.projects,
-    student.achievements,
+    Array.isArray(student.skills) ? student.skills : [],
+    Array.isArray(student.projects) ? student.projects : [],
+    Array.isArray(student.achievements) ? student.achievements : [],
     activeGoal,
-    student.resumeChecklist || []
+    Array.isArray(student.resumeChecklist) ? student.resumeChecklist : []
   );
 
   // 3. Student Personal Details Card
@@ -332,7 +333,14 @@ export async function generateStudentPDF(student: StudentRecord): Promise<void> 
   }
 
   // Page Numbers Footer
-  const totalPages = (doc as any).getNumberOfPages ? (doc as any).getNumberOfPages() : 1;
+  const docAny = doc as any;
+  const totalPages = typeof docAny.getNumberOfPages === 'function'
+    ? docAny.getNumberOfPages()
+    : typeof docAny.internal?.getNumberOfPages === 'function'
+    ? docAny.internal.getNumberOfPages()
+    : Array.isArray(docAny.internal?.pages)
+    ? docAny.internal.pages.length - 1
+    : 1;
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
     doc.setDrawColor(226, 232, 240);
@@ -346,7 +354,7 @@ export async function generateStudentPDF(student: StudentRecord): Promise<void> 
   }
 
   // Generate File Name
-  const cleanName = student.profile.name
+  const cleanName = (student.profile?.name || 'Student')
     .trim()
     .replace(/[^a-zA-Z0-9_\s-]/g, '')
     .replace(/\s+/g, '_');

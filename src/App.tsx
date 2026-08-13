@@ -65,7 +65,6 @@ import { UpgradePage } from './pages/UpgradePage';
 import { PlayCircle, LogIn, UserPlus, Sparkles, LogOut, Shield } from 'lucide-react';
 
 function MainAppContent() {
-  const [multiState, setMultiState] = useState<MultiStudentState>(() => loadMultiStudentState());
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -80,6 +79,8 @@ function MainAppContent() {
   const { canAccess, upgradeModalOpen, setUpgradeModalOpen, requiredFeatureForModal, setDemoMode } = useSubscription();
   const { user, fetchCloudState, saveCloudState, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+
+  const [multiState, setMultiState] = useState<MultiStudentState>(() => loadMultiStudentState(user?.id));
 
   // Sync demoMode in SubscriptionContext whenever isDemoSession or user changes
   useEffect(() => {
@@ -143,7 +144,7 @@ function MainAppContent() {
     };
   };
 
-  // Sign out handler
+  // Sign out handler - complete state reset
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -152,14 +153,19 @@ function MainAppContent() {
     } finally {
       setIsDemoSession(false);
       setNeedsOnboarding(false);
-      setMultiState(loadMultiStudentState());
+      setMultiState(loadMultiStudentState(undefined));
+      setActiveTab('dashboard');
     }
   };
 
-  // Load Cloud State when user logs in
+  // Load Cloud State when user logs in or switches accounts
   useEffect(() => {
     if (user) {
       setIsDemoSession(false);
+      // Immediately reset local state to user-scoped storage to prevent rendering another user's profiles
+      const userLocal = loadMultiStudentState(user.id);
+      setMultiState(userLocal);
+
       fetchCloudState().then((cloudData) => {
         if (
           cloudData &&
@@ -174,22 +180,39 @@ function MainAppContent() {
             id: `usr-${user.id}`,
             ...cloudData,
           };
-          setMultiState({
+          const cloudMulti = {
             students: [cloudRecord],
             activeStudentId: cloudRecord.id,
-          });
+          };
+          setMultiState(cloudMulti);
+          saveMultiStudentState(cloudMulti, user.id);
         } else {
-          // New user (Google or Email) -> create clean empty profile and show onboarding wizard
-          const blankRecord = createBlankUserRecord(user.email || '', user.user_metadata?.full_name);
-          setMultiState({
-            students: [blankRecord],
-            activeStudentId: blankRecord.id,
-          });
-          setNeedsOnboarding(true);
+          // Check if local user-scoped record exists
+          const existing = loadMultiStudentState(user.id);
+          if (
+            existing &&
+            existing.students &&
+            existing.students.length > 0 &&
+            existing.students[0].profile.name !== 'Student User'
+          ) {
+            setMultiState(existing);
+            setNeedsOnboarding(false);
+          } else {
+            // New user (Google or Email) -> create clean empty profile and show onboarding wizard
+            const blankRecord = createBlankUserRecord(user.email || '', user.user_metadata?.full_name);
+            const newMulti = {
+              students: [blankRecord],
+              activeStudentId: blankRecord.id,
+            };
+            setMultiState(newMulti);
+            saveMultiStudentState(newMulti, user.id);
+            setNeedsOnboarding(true);
+          }
         }
       });
     } else {
       setNeedsOnboarding(false);
+      setMultiState(loadMultiStudentState(undefined));
     }
   }, [user]);
 
@@ -200,10 +223,14 @@ function MainAppContent() {
       id: `usr-${user?.id || Date.now()}`,
       ...newState,
     };
-    setMultiState({
+    const updatedMulti = {
       students: [updatedRecord],
       activeStudentId: updatedRecord.id,
-    });
+    };
+    setMultiState(updatedMulti);
+    if (user?.id) {
+      saveMultiStudentState(updatedMulti, user.id);
+    }
     saveCloudState(newState);
   };
 
@@ -240,10 +267,10 @@ function MainAppContent() {
     );
   }, [multiState.students, multiState.activeStudentId]);
 
-  // Persist multiState changes
+  // Persist multiState changes with user scoping
   useEffect(() => {
-    saveMultiStudentState(multiState);
-  }, [multiState]);
+    saveMultiStudentState(multiState, user?.id);
+  }, [multiState, user?.id]);
 
   // Helper to mutate active student record
   const updateActiveStudent = (updater: (prev: StudentRecord) => StudentRecord) => {
@@ -401,8 +428,18 @@ function MainAppContent() {
   };
 
   const handleResetDemo = () => {
-    const resetState = resetToDemoData();
-    setMultiState(resetState);
+    if (user) {
+      const blankRecord = createBlankUserRecord(user.email || '', user.user_metadata?.full_name);
+      const resetState: MultiStudentState = {
+        students: [blankRecord],
+        activeStudentId: blankRecord.id,
+      };
+      setMultiState(resetState);
+      saveMultiStudentState(resetState, user.id);
+    } else {
+      const resetState = resetToDemoData(undefined);
+      setMultiState(resetState);
+    }
   };
 
   const handleClearAll = () => {
