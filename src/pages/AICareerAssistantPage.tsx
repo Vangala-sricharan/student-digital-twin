@@ -42,7 +42,7 @@ export const AICareerAssistantPage: React.FC<AICareerAssistantPageProps> = ({ st
     {
       id: 'init-1',
       sender: 'ai',
-      text: `Hello Vangala Sricharan! 👋 I am your Gemini-powered AI Career Assistant. I have analyzed your Student Digital Twin data:\n\n• Current Readiness Score: ${readiness.overallScore}%\n• Target Role: ${activeGoal.title}\n• Active Projects: ${state.projects.length} (${state.projects.filter(p => p.status === 'Completed').length} completed)\n\nHow can I help guide your AI/ML engineering roadmap today?`,
+      text: `Hello ${state.profile.name || 'Student'}! 👋 I am your Gemini-powered AI Career Assistant. I have analyzed your Student Digital Twin data:\n\n• Current Readiness Score: ${readiness.overallScore}%\n• Target Role: ${activeGoal ? activeGoal.title : 'Software Engineer'}\n• Active Projects: ${state.projects.length} (${state.projects.filter(p => p.status === 'Completed').length} completed)\n\nHow can I help guide your career roadmap today?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);

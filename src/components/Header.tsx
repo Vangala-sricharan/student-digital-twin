@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Search, Sparkles, RotateCcw, Globe, Sun, Moon, Zap } from 'lucide-react';
+import { Menu, Search, Sparkles, RotateCcw, Globe, Sun, Moon, Zap, LogOut, User } from 'lucide-react';
 import { StudentProfile, StudentRecord } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
@@ -20,6 +20,8 @@ interface HeaderProps {
   onSelectStudent?: (id: string) => void;
   onNavigateToStudents?: () => void;
   onOpenAuth?: () => void;
+  user?: any | null;
+  onSignOut?: () => void;
   id?: string;
 }
 
@@ -36,6 +38,8 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectStudent,
   onNavigateToStudents,
   onOpenAuth,
+  user,
+  onSignOut,
   id,
 }) => {
   const { language, setLanguage, languages } = useLanguage();
@@ -45,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   const getGreeting = () => getISTGreeting();
 
-  const firstName = profile.name.split(' ')[1] || profile.name.split(' ')[0] || 'Sricharan';
+  const firstName = profile.name ? (profile.name.split(' ')[1] || profile.name.split(' ')[0]) : 'Student';
 
   return (
     <header
@@ -133,10 +137,29 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Cloud Sync Indicator */}
         {onOpenAuth && <CloudSyncIndicator onOpenAuth={onOpenAuth} compact={true} />}
 
+        {/* Authenticated User Indicator & Log Out Button */}
+        {user && onSignOut && (
+          <div className="flex items-center gap-1.5">
+            <span className="hidden xl:inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-[#B7C4D6] bg-slate-100 dark:bg-[#0B1626] px-2.5 py-1 rounded-xl border border-slate-200 dark:border-sky-500/20">
+              <User className="h-3.5 w-3.5 text-cyan-500 shrink-0" />
+              <span className="max-w-[100px] truncate">{user.user_metadata?.full_name || user.email?.split('@')[0]}</span>
+            </span>
+            <button
+              onClick={onSignOut}
+              title={`Log Out (${user.email})`}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-bold text-xs transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+            >
+              <LogOut className="h-3.5 w-3.5 shrink-0" />
+              <span className="hidden sm:inline">Log Out</span>
+            </button>
+          </div>
+        )}
+
         {/* Plan / Demo Badge */}
         {onNavigateToUpgrade && (
           <button
             onClick={onNavigateToUpgrade}
+            title={demoMode ? 'DEMO PRO — All premium features are available for demonstration.' : undefined}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border transition-all ${
               demoMode || plan !== 'free'
                 ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/30'
@@ -145,7 +168,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Zap className="h-3.5 w-3.5 text-cyan-500" />
             <span className="hidden sm:inline">
-              {demoMode ? 'DEMO' : plan === 'pro' ? 'PRO' : plan === 'pro_annual' ? 'ANNUAL' : 'FREE'}
+              {demoMode ? 'DEMO PRO' : plan === 'pro' ? 'PRO' : plan === 'pro_annual' ? 'ANNUAL' : 'FREE'}
             </span>
           </button>
         )}

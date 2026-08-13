@@ -22,6 +22,7 @@ import {
   RotateCcw,
   Sparkles,
   Lock,
+  LogOut,
 } from 'lucide-react';
 import { StudentProfile } from '../types';
 import { useLanguage } from '../context/LanguageContext';
@@ -49,8 +50,6 @@ export type ActiveTab =
   | 'upgrade'
   | 'settings';
 
-
-
 interface SidebarProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
@@ -60,6 +59,8 @@ interface SidebarProps {
   onResetDemo: () => void;
   isMobileOpen: boolean;
   setIsMobileOpen: (open: boolean) => void;
+  user?: any | null;
+  onSignOut?: () => void;
   id?: string;
 }
 
@@ -70,6 +71,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onResetDemo,
   isMobileOpen,
   setIsMobileOpen,
+  user,
+  onSignOut,
   id,
 }) => {
   const { t } = useLanguage();
@@ -234,13 +237,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Footer Controls */}
       <div className="mt-6 pt-3 border-t border-slate-200/80 dark:border-sky-500/15 space-y-2">
+        {user && onSignOut && (
+          <button
+            onClick={() => {
+              setIsMobileOpen(false);
+              onSignOut();
+            }}
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 text-rose-600 dark:text-rose-400 border border-rose-500/30 py-2 px-3 text-xs font-bold transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+          >
+            <LogOut className="h-4 w-4 shrink-0" />
+            <span>Log Out ({user.email?.split('@')[0]})</span>
+          </button>
+        )}
+
         <div className="flex items-center justify-between gap-2">
           <button
             onClick={() => handleNavClick('upgrade')}
             className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 py-2 px-3 text-xs font-bold hover:bg-cyan-500/20 transition-all"
           >
             <Sparkles className="h-3.5 w-3.5" />
-            <span>{demoMode || plan !== 'free' ? 'Pro Active' : t('upgrade_cta')}</span>
+            <span>{demoMode ? 'DEMO PRO' : plan !== 'free' ? 'Pro Active' : t('upgrade_cta')}</span>
           </button>
 
           <button

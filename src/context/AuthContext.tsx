@@ -78,7 +78,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, fullName: string) => {
     setAuthError(null);
     if (!supabase) {
-      return { error: new Error('Supabase client is not configured') };
+      const err = new Error('Supabase client is not configured');
+      setAuthError(err.message);
+      return { error: err };
     }
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -89,27 +91,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       },
     });
-    if (error) setAuthError(error.message);
-    return { error, data };
+    if (error) {
+      let formattedMsg = error.message;
+      if (formattedMsg.includes('User already registered') || formattedMsg.includes('already registered')) {
+        formattedMsg = 'User already registered. Please log in instead.';
+      }
+      setAuthError(formattedMsg);
+      return { error: new Error(formattedMsg), data };
+    }
+    return { error: null, data };
   };
 
   const signIn = async (email: string, password: string) => {
     setAuthError(null);
     if (!supabase) {
-      return { error: new Error('Supabase client is not configured') };
+      const err = new Error('Supabase client is not configured');
+      setAuthError(err.message);
+      return { error: err };
     }
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    if (error) setAuthError(error.message);
-    return { error, data };
+    if (error) {
+      let formattedMsg = error.message;
+      if (formattedMsg.includes('Email not confirmed')) {
+        formattedMsg = 'Please verify your email before signing in.';
+      } else if (
+        formattedMsg.includes('Invalid login credentials') ||
+        formattedMsg.includes('invalid_credentials') ||
+        formattedMsg.includes('Invalid credentials')
+      ) {
+        formattedMsg = 'Incorrect email or password.';
+      } else if (formattedMsg.includes('Failed to fetch') || formattedMsg.includes('NetworkError')) {
+        formattedMsg = 'Unable to connect. Please try again.';
+      }
+      setAuthError(formattedMsg);
+      return { error: new Error(formattedMsg), data };
+    }
+    return { error: null, data };
   };
 
   const signInWithGoogle = async () => {
     setAuthError(null);
     if (!supabase) {
-      return { error: new Error('Supabase client is not configured') };
+      const err = new Error('Supabase client is not configured');
+      setAuthError(err.message);
+      return { error: err };
     }
     const customUrl = (import.meta as any).env?.VITE_AUTH_REDIRECT_URL;
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -127,8 +155,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         redirectTo: redirectUrl,
       },
     });
-    if (error) setAuthError(error.message);
-    return { error, data };
+    if (error) {
+      let formattedMsg = error.message;
+      if (formattedMsg.toLowerCase().includes('cancel')) {
+        formattedMsg = 'Google sign-in was cancelled.';
+      }
+      setAuthError(formattedMsg);
+      return { error: new Error(formattedMsg), data };
+    }
+    return { error: null, data };
   };
 
   const signOut = async () => {

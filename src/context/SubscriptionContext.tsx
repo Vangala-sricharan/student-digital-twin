@@ -24,6 +24,7 @@ interface SubscriptionContextType {
   plan: PlanType;
   setPlan: (plan: PlanType) => void;
   demoMode: boolean;
+  setDemoMode: (active: boolean) => void;
   toggleDemoMode: () => void;
   canAccess: (feature: FeatureKey | string) => boolean;
   aiUsageCount: number;
@@ -55,18 +56,19 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } catch (e) {
       console.error('Failed to read plan', e);
     }
-    return 'pro';
+    return 'free';
   });
 
-  const [demoMode, setDemoModeState] = useState<boolean>(() => {
+  const [demoMode, setDemoModeState] = useState<boolean>(false);
+
+  const setDemoMode = (active: boolean) => {
+    setDemoModeState(active);
     try {
-      const saved = localStorage.getItem(DEMO_MODE_KEY);
-      if (saved === 'false') return false;
-      return true;
+      localStorage.setItem(DEMO_MODE_KEY, String(active));
     } catch (e) {
-      return true; // default demo mode enabled
+      console.error('Failed to save demo mode', e);
     }
-  });
+  };
 
   const [aiUsageCount, setAiUsageCount] = useState<number>(() => {
     try {
@@ -158,6 +160,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         plan,
         setPlan,
         demoMode,
+        setDemoMode,
         toggleDemoMode,
         canAccess,
         aiUsageCount,

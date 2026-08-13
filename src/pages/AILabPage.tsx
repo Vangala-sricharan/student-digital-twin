@@ -16,7 +16,7 @@ export const AILabPage: React.FC<AILabPageProps> = ({ profile, skills, projects,
   const [chatHistory, setChatHistory] = useState<Array<{ sender: 'user' | 'ai'; text: string }>>([
     {
       sender: 'ai',
-      text: `Hello Sricharan! I am your AI Career Twin Assistant. I have loaded your digital twin context (B.Tech CSE AI/ML at Marwadi University, 2nd Year, Target: AI/ML Engineer). How can I guide your learning roadmap today?`,
+      text: `Hello ${profile.name || 'Student'}! I am your AI Career Twin Assistant. I have loaded your digital twin context (${profile.degree || ''} ${profile.branch || ''}, ${profile.year || ''}, Target: ${profile.careerGoal || 'Software Engineer'}). How can I guide your learning roadmap today?`,
     },
   ]);
 

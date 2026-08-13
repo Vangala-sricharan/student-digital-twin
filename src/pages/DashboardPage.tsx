@@ -84,12 +84,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 <Zap className="h-3 w-3" />
-                <span>{demoMode ? 'DEMO MODE (UNLOCKED)' : plan === 'pro' ? 'PRO PLAN' : 'FREE PLAN'}</span>
+                <span>{demoMode ? 'DEMO PRO (UNLOCKED)' : plan === 'pro' ? 'PRO PLAN' : 'FREE PLAN'}</span>
               </span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              {getISTGreeting()}, {profile.name.split(' ')[1] || profile.name.split(' ')[0] || 'Sricharan'} 👋
+              {getISTGreeting()}, {profile.name ? (profile.name.split(' ')[1] || profile.name.split(' ')[0]) : 'Student'} 👋
             </h1>
             <p className="mt-2 text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
               Your digital twin is tracking your journey toward becoming an{' '}

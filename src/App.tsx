@@ -77,27 +77,107 @@ function MainAppContent() {
   // Onboarding state for new user
   const [needsOnboarding, setNeedsOnboarding] = useState<boolean>(false);
 
-  const { canAccess, upgradeModalOpen, setUpgradeModalOpen, requiredFeatureForModal } = useSubscription();
+  const { canAccess, upgradeModalOpen, setUpgradeModalOpen, requiredFeatureForModal, setDemoMode } = useSubscription();
   const { user, fetchCloudState, saveCloudState, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+
+  // Sync demoMode in SubscriptionContext whenever isDemoSession changes
+  useEffect(() => {
+    setDemoMode(isDemoSession);
+  }, [isDemoSession, setDemoMode]);
+
+  // Helper to create a clean blank StudentRecord for new authenticated users
+  const createBlankUserRecord = (email: string, fullName?: string): StudentRecord => {
+    const displayName = fullName && fullName.trim() !== '' ? fullName : email ? email.split('@')[0] : 'Student User';
+    return {
+      id: `usr-${Date.now()}`,
+      profile: {
+        name: displayName,
+        degree: 'B.Tech',
+        branch: 'Computer Science',
+        university: '',
+        year: '1st Year',
+        semester: '1st Semester',
+        cgpa: '',
+        careerGoal: 'Software Engineer',
+        bio: '',
+        linkedIn: '',
+        gitHub: '',
+        portfolio: '',
+        email: email,
+        location: '',
+        academicFocus: [],
+      },
+      skills: [],
+      projects: [],
+      achievements: [],
+      activeCareerGoalId: 'cg-swe',
+      careerGoals: [
+        {
+          id: 'cg-swe',
+          title: 'Software Engineer',
+          description: 'Build robust software applications and systems.',
+          targetSkills: { DataStructures: 70, Algorithms: 70, SystemDesign: 60 },
+          recommendedCourses: ['Data Structures & Algorithms', 'System Design Fundamentals'],
+        },
+      ],
+      progressHistory: [
+        {
+          id: `p-${Date.now()}`,
+          date: new Date().toISOString().split('T')[0],
+          overallScore: 0,
+          categoryScores: { skills: 0, projects: 0, academics: 0, achievements: 0 },
+          note: 'Initial Student Twin initialized',
+        },
+      ],
+      resumeChecklist: [],
+      customRecommendations: [],
+      tasks: [],
+    };
+  };
+
+  // Sign out handler
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (err) {
+      console.error('Sign out error:', err);
+    } finally {
+      setIsDemoSession(false);
+      setNeedsOnboarding(false);
+      setMultiState(loadMultiStudentState());
+    }
+  };
 
   // Load Cloud State when user logs in
   useEffect(() => {
     if (user) {
+      setIsDemoSession(false);
       fetchCloudState().then((cloudData) => {
-        if (cloudData && cloudData.profile && cloudData.profile.name) {
-          // User already has saved profile
+        if (
+          cloudData &&
+          cloudData.profile &&
+          cloudData.profile.name &&
+          cloudData.profile.name.trim() !== '' &&
+          cloudData.profile.name !== 'Student User'
+        ) {
+          // Existing user with saved cloud profile
           setNeedsOnboarding(false);
-          updateActiveStudent((prev) => ({
-            ...prev,
-            profile: cloudData.profile,
-            skills: cloudData.skills || [],
-            projects: cloudData.projects || [],
-            achievements: cloudData.achievements || [],
-            tasks: cloudData.tasks || prev.tasks || [],
-          }));
+          const cloudRecord: StudentRecord = {
+            id: `usr-${user.id}`,
+            ...cloudData,
+          };
+          setMultiState({
+            students: [cloudRecord],
+            activeStudentId: cloudRecord.id,
+          });
         } else {
-          // New user needs onboarding wizard
+          // New user (Google or Email) -> create clean empty profile and show onboarding wizard
+          const blankRecord = createBlankUserRecord(user.email || '', user.user_metadata?.full_name);
+          setMultiState({
+            students: [blankRecord],
+            activeStudentId: blankRecord.id,
+          });
           setNeedsOnboarding(true);
         }
       });
@@ -109,11 +189,14 @@ function MainAppContent() {
   // Handle Onboarding completion
   const handleOnboardingComplete = (newState: DigitalTwinState) => {
     setNeedsOnboarding(false);
-    const newRecord: StudentRecord = {
-      id: `usr-${Date.now()}`,
+    const updatedRecord: StudentRecord = {
+      id: `usr-${user?.id || Date.now()}`,
       ...newState,
     };
-    handleAddStudent(newRecord);
+    setMultiState({
+      students: [updatedRecord],
+      activeStudentId: updatedRecord.id,
+    });
     saveCloudState(newState);
   };
 
@@ -355,6 +438,8 @@ function MainAppContent() {
           onEnterDemo={() => setIsDemoSession(true)}
           onToggleTheme={toggleTheme}
           theme={theme}
+          user={user}
+          onSignOut={handleSignOut}
         />
         <AuthModal
           isOpen={authModalOpen}
@@ -374,11 +459,17 @@ function MainAppContent() {
       {/* Demo Session Top Banner */}
       {isDemoSession && (
         <div className="bg-sky-500/10 border-b border-sky-300/40 dark:border-sky-500/30 px-3 sm:px-4 py-2 sm:py-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-sky-800 dark:text-sky-200 relative z-30">
-          <div className="flex items-center gap-2 font-bold">
+          <div className="flex flex-wrap items-center gap-2 font-bold">
             <PlayCircle className="h-4 w-4 text-sky-600 dark:text-sky-400 shrink-0" />
-            <span className="text-[11px] sm:text-xs">DEMO MODE — CREATOR SHOWCASE (Vangala Sricharan Profile)</span>
+            <span className="text-[11px] sm:text-xs">DEMO MODE — CREATOR SHOWCASE</span>
+            <span className="px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-700 dark:text-sky-300 text-[10px] font-black border border-sky-400/40 uppercase tracking-wider">
+              DEMO PRO
+            </span>
+            <span className="text-[11px] text-sky-700/90 dark:text-sky-300/80 font-normal hidden md:inline">
+              — All premium features are available for demonstration.
+            </span>
           </div>
-          <div className="flex items-center gap-2 self-end sm:self-auto">
+          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
             <button
               onClick={() => {
                 setAuthDefaultMode('signup');
@@ -424,6 +515,8 @@ function MainAppContent() {
           onResetDemo={handleResetDemo}
           isMobileOpen={isMobileOpen}
           setIsMobileOpen={setIsMobileOpen}
+          user={user}
+          onSignOut={handleSignOut}
         />
 
         {/* Main Content Area */}
@@ -442,6 +535,8 @@ function MainAppContent() {
             onSelectStudent={handleSelectStudent}
             onNavigateToStudents={() => setActiveTab('students')}
             onOpenAuth={() => setAuthModalOpen(true)}
+            user={user}
+            onSignOut={handleSignOut}
           />
 
           <main id="app-main-content" className="flex-1 px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-12 min-w-0 max-w-full overflow-x-hidden">
