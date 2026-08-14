@@ -1,6 +1,7 @@
 import React from 'react';
 import { Lock, Sparkles, Check, Zap } from 'lucide-react';
 import { useSubscription } from '../context/SubscriptionContext';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
 interface UpgradeModalProps {
@@ -16,7 +17,8 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   featureName = 'Pro AI System',
   onOpenUpgradePage,
 }) => {
-  const { toggleDemoMode, demoMode } = useSubscription();
+  const { toggleDemoMode } = useSubscription();
+  const { user } = useAuth();
   const { t } = useLanguage();
 
   if (!isOpen) return null;
@@ -27,7 +29,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
         <div className="absolute top-0 right-0 p-4">
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer"
           >
             ✕
           </button>
@@ -72,21 +74,30 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                 onClose();
                 if (onOpenUpgradePage) onOpenUpgradePage();
               }}
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold text-sm shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold text-sm shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Zap className="h-4 w-4" />
               <span>{t('upgrade_cta')}</span>
             </button>
 
-            <button
-              onClick={() => {
-                toggleDemoMode();
-                onClose();
-              }}
-              className="w-full py-3 px-4 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 font-medium text-xs border border-slate-200/80 dark:border-white/10 transition-colors"
-            >
-              Enable Demo Mode (Unlock)
-            </button>
+            {user ? (
+              <button
+                onClick={onClose}
+                className="w-full py-3 px-4 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 font-medium text-xs border border-slate-200/80 dark:border-white/10 transition-colors cursor-pointer"
+              >
+                Continue with Free Plan
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  toggleDemoMode();
+                  onClose();
+                }}
+                className="w-full py-3 px-4 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 font-medium text-xs border border-slate-200/80 dark:border-white/10 transition-colors cursor-pointer"
+              >
+                Enable Demo Mode (Unlock)
+              </button>
+            )}
           </div>
         </div>
       </div>

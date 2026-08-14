@@ -628,6 +628,8 @@ function MainAppContent() {
                 profile={activeStudent.profile}
                 onUpdateProfile={handleUpdateProfile}
                 activeStudent={activeStudent}
+                user={user}
+                onSignOut={handleSignOut}
               />
             )}
 
